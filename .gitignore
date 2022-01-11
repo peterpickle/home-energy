@@ -1,0 +1,6 @@
+#ignore
+__pycache__/
+*.rdb
+p1_error_log.txt
+production_error_log.txt
+
