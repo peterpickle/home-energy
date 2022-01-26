@@ -186,7 +186,7 @@ while True:
         db.save_inverter_msg(invMsg)
 
         if offset != 0:
-            logger.error(f'Discarding data. length:{offset} data:"{data[:offset]}"')
+            logger.debug(f'Discarding data. length:{offset} data:"{data[:offset]}"')
 
         #remove the part to discard and the message we handled
         data = data[(offset  + DATA_MSG_LEN):]
