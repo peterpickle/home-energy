@@ -8,13 +8,14 @@
     <style>
     /* color palette
       https://coolors.co/
-    --inchworm: #8cea5d;
-    --Xiketic: #171216;
-    --caroline-blue: #09FF5;
+    --up: #8cea5d;
+    --black: #171216;
+    --down: #009FF5;
     --maximum-yellow-red: #ffc95c;
-    --fire-opal: #e15a51;
-    --ghost-white: #f4f4f9;
-    --honey-yellow: #f7B32b;
+    --peak-red: #e15a51;
+    --white: #f4f4f9;
+    --yellow: #f7B32b;
+    --dark-blue: #2266bf;
     peak: DC5665
     */
     body
@@ -22,7 +23,6 @@
         font-family: Arial, Tahoma, sans-serif;
         text-align: center;
         background-color: #171216;
-        
     }
     .current_usage_us
     {
@@ -124,12 +124,17 @@
     {
         color: #f7B32b;
     }
+    #data_field_total_cons_div
+    {
+        color: #2266bf;
+    }
     </style>
     <script>
     const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
     Object.freeze(ModeEnum);
 
     var FEATURE_PRODUCTION = 1;
+    var FEATURE_CONSUMPTION = 1;
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
@@ -141,15 +146,18 @@
 
     var chartCreated = false;
 
-    var chartColors = ['#009FF5', '#8cea5d', '#f7B32b', '#dc5665'];
+    var chartColors = ['#009FF5', '#8cea5d', '#f7B32b', '#dc5665', '#2266bf'];
     var chartShowUp = true;
     var chartShowDown = true;
     var chartShowProd = true;
+    var chartShowCons = false;
     var chartShowPeakDown = false;
 
     var chartPrevShowUp;
     var chartPrevShowDown;
     var chartPrevShowProd;
+    var chartPrevShowCons;
+    var chartPrevShowPeakDown;
 
     Date.prototype.addDays = function (days) {
         const date = new Date(this.valueOf());
@@ -189,6 +197,16 @@
 
     function round(value, decimals) {
         return Number(Math.round(value +'e'+ decimals) +'e-'+ decimals).toFixed(decimals);
+    }
+
+    function get_fixed_digits(value) {
+        if (value >= 100) {
+            return round(value, 0);
+        } else if (value >= 10) {
+            return round(value, 1);
+        } else {
+            return round(value, 2);
+        }
     }
 
     function getLatestUsage() {
@@ -234,45 +252,31 @@
             },
             function(result) {
                 //display the total values
-                if (result.total_up >= 100) {
-                    rounded_total_up = round(result.total_up, 0);
-                } else if (result.total_up >= 10) {
-                    rounded_total_up = round(result.total_up, 1);
-                } else {
-                    rounded_total_up = round(result.total_up, 2);
-                }
-                if (result.total_down >= 100) {
-                    rounded_total_down = round(result.total_down, 0);
-                } else if (result.total_down >= 10) {
-                    rounded_total_down = round(result.total_down, 1);
-                } else {
-                    rounded_total_down = round(result.total_down, 2);
-                }
-                $("#data_field_total_up_div").html(rounded_total_up);
-                $("#data_field_total_down_div").html(rounded_total_down);
+                $("#data_field_total_up_div").html(get_fixed_digits(result.total_up));
+                $("#data_field_total_down_div").html(get_fixed_digits(result.total_down));
                 $("#data_field_peak_down_div").html(round(result.peak_down, 1));
 
                 if (FEATURE_PRODUCTION)
                 {
-                    if (result.total_prod >= 100) {
-                        rounded_total_prod= round(result.total_prod, 0);
-                    } else if (result.total_down >= 10) {
-                        rounded_total_prod = round(result.total_prod, 1);
-                    } else {
-                        rounded_total_prod = round(result.total_prod, 2);
-                    }
-                    $("#data_field_total_prod_div").html(rounded_total_prod);
+                    $("#data_field_total_prod_div").html(get_fixed_digits(result.total_prod));
+                }
+                if (FEATURE_CONSUMPTION)
+                {
+                    total_cons = result.total_down + result.total_prod - result.total_up;
+                    $("#data_field_total_cons_div").html(get_fixed_digits(total_cons));
                 }
 
                 // Create the data table
                 chartData = new google.visualization.DataTable();
                 p = null;
+                c = null;
 
                 chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
                 chartData.addColumn('number', 'Down');
                 chartData.addColumn('number', 'Up');
                 chartData.addColumn('number', 'Production');
                 chartData.addColumn('number', 'Peak Down');
+                chartData.addColumn('number', 'Consumption');
 
                 $.each(result.detailed_up_down, function(i, entry) {        
                     timestamp = new Date(entry.t);
@@ -283,7 +287,19 @@
                             p = null;
                         }
                     }
-                    chartData.addRow([timestamp, entry.d, (entry.u == 0) ? null : -entry.u, p, entry.pd]);
+                    if (FEATURE_CONSUMPTION) {
+                        if (entry.p <= entry.u) {
+                            c = entry.d;
+                        } else {
+                            c = entry.d + entry.p - entry.u;
+                        }
+                    }
+                    chartData.addRow([timestamp,
+                                      entry.d,
+                                      (entry.u == 0) ? null : -entry.u,
+                                      p,
+                                      entry.pd,
+                                      c]);
                 });
 
                 //How dates are displayed in the tooltips
@@ -343,6 +359,14 @@
                 chartDisplayData.setValue(rId, cId, null);
             }
         }
+        if (!chartShowCons) {
+            cId = chartDisplayData.getColumnIndex('Consumption');
+            //chartDisplayData.removeColumns(cId, 1);
+            nbOfRows = chartDisplayData.getNumberOfRows();
+            for (rId = 0;rId < nbOfRows; rId++) {
+                chartDisplayData.setValue(rId, cId, null);
+            }
+        }
         if (!chartShowPeakDown) {
             cId = chartDisplayData.getColumnIndex('Peak Down');
             //chartDisplayData.removeColumns(cId, 1);
@@ -351,20 +375,6 @@
                 chartDisplayData.setValue(rId, cId, null);
             }
         }
-
-        /*chartColors = [];
-        if (chartShowDown) {
-            chartColors.push('#009FF5');
-        }
-        if (chartShowUp) {
-            chartColors.push('#8cea5d');
-        }
-        if (chartShowProd) {
-            chartColors.push('#f7B32b');
-        }
-        if (chartShowPeakDown) {
-            chartColors.push('#dc5665');
-        }*/
 
         if (chartShowUp && chartShowProd) {
             //set the production to the self usage, not the full production
@@ -483,9 +493,19 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
+                } else if (chartShowCons) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+                    chartShowPeakDown = chartPrevShowPeakDown;
+
+                    //disable consumption data
+                    chartShowCons = false;
                 } else {
                     chartShowUp = !chartShowUp;
                 }
@@ -500,9 +520,19 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
+                } else if (chartShowCons) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+                    chartShowPeakDown = chartPrevShowPeakDown;
+
+                    //disable consumption data
+                    chartShowCons = false;
                 } else {
                     chartShowDown = !chartShowDown;
                 }
@@ -517,9 +547,19 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
+                } else if (chartShowCons) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+                    chartShowPeakDown = chartPrevShowPeakDown;
+
+                    //disable consumption data
+                    chartShowCons = false;
                 } else {
                     chartShowProd = !chartShowProd;
                 }
@@ -534,18 +574,51 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowCons = chartPrevShowCons;
+                } else if (chartShowCons) {
+                    chartShowCons = false;
                 } else {
                     //save the current settings
                     chartPrevShowUp = chartShowUp;
                     chartPrevShowDown = chartShowDown;
                     chartPrevShowProd = chartShowProd;
+                    chartPrevShowCons = chartShowCons;
 
                     //disable other data
                     chartShowUp = false;
                     chartShowDown = false;
                     chartShowProd = false;
+                    chartShowCons = false;
                 }
                 chartShowPeakDown = !chartShowPeakDown;
+                showHideChartColumns();
+                drawChart(mode, chartDisplayData);
+            }
+        );
+        $("#data_field_total_cons_div").click(
+            function() {
+                if (chartShowCons) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+                    chartShowPeakDown = chartPrevShowPeakDown;
+                } else if (chartShowPeakDown) {
+                    chartShowPeakDown = false;
+                } else {
+                    //save the current settings
+                    chartPrevShowUp = chartShowUp;
+                    chartPrevShowDown = chartShowDown;
+                    chartPrevShowProd = chartShowProd;
+                    chartPrevShowPeakDown = chartShowPeakDown;
+
+                    //disable other data
+                    chartShowUp = false;
+                    chartShowDown = false;
+                    chartShowProd = false;
+                    chartShowPeakDown = false;
+                }
+                chartShowCons = !chartShowCons;
                 showHideChartColumns();
                 drawChart(mode, chartDisplayData);
             }
@@ -752,6 +825,10 @@
         <tr>
             <td><div id="data_field_peak_down_div" class="data_field"></div></td>
             <td><div id="data_field_total_prod_div" class="data_field"></div></td>
+        </tr>
+        <tr>
+            <td><div id="data_field_total_cons_div" class="data_field"></div></td>
+            <td></td>
         </tr>
     </table>
 </body>
