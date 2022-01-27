@@ -523,7 +523,7 @@
                         backgroundColor: 'transparent',
                         colors: chartColors,
                         bar: { 
-                            groupWidth: '100%'
+                            groupWidth: '80%'
                         },
                         vAxis: { 
                             textStyle: { 
