@@ -3,132 +3,11 @@
     <title>Home Energy</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link href="usage.css" rel="stylesheet" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <style>
-    /* color palette
-      https://coolors.co/
-    --up: #8cea5d;
-    --black: #171216;
-    --down: #009FF5;
-    --maximum-yellow-red: #ffc95c;
-    --peak-red: #e15a51;
-    --white: #f4f4f9;
-    --yellow: #f7B32b;
-    --dark-blue: #2266bf;
-    peak: DC5665
-    */
-    body
-    {
-        font-family: Arial, Tahoma, sans-serif;
-        text-align: center;
-        background-color: #171216;
-    }
-    .current_usage_us
-    {
-        font-size: 160pt;
-        font-weight: 900;
-        color: #8cea5d;
-    }
-    .current_usage_ds_normal
-    {
-        font-size: 160pt;
-        font-weight: 900;
-        color: #009FF5;
-    }
-    .current_usage_ds_high
-    {
-        font-size: 160pt;
-        font-weight: 900;
-        color: #ffc95c;
-    }
-    .current_usage_ds_very_high
-    {
-        font-size: 160pt;
-        font-weight: 900;
-        color: #e15a51;
-    }
-    .current_prod
-    {
-        display: inline-block;
-        padding: 0px 50px 0px 50px;
-        font-size: 40pt;
-        font-weight: 900;
-        color: #f7B32b;
-    }
-    .current_peak
-    {
-        display: inline-block;
-        padding: 0px 50px 0px 50px;
-        font-size: 40pt;
-        font-weight: 900;
-        color: #dc5665;
-    }
-    .mode_button
-    {
-        display: inline-block;
-        color: #f4f4f9;
-        padding: 50px 50px 0px 50px;
-        font-size: 20pt;
-        font-weight: 900;
-    }
-    .chart
-    {
-        text-align: center;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .day_date
-    {
-        display: inline-block;
-        color: #f4f4f9;
-        font-size: 40pt;
-        font-weight: 900;
-    }
-    .control_button
-    {
-        display: inline-block;
-        color: #f4f4f9;
-        padding: 0px 50px 0px 50px;
-        font-size: 40pt;
-        font-weight: 900;
-    }
-    .data_fields
-    {
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .data_field
-    {
-        padding: 50px 50px 50px 50px;
-        font-size: 120pt;
-        font-weight: 900;
-        /*display: table-cell;
-        vertical-align: middle;*/
-        /*display: inline-block;
-        padding: 0px 50px 0px 50px;*/
-    }
-    #data_field_total_up_div
-    {
-        color: #8cea5d;
-    }
-    #data_field_total_down_div
-    {
-        color: #009ff5;
-    }
-    #data_field_peak_down_div
-    {
-        color: #dc5665;
-    }
-    #data_field_total_prod_div
-    {
-        color: #f7B32b;
-    }
-    #data_field_total_cons_div
-    {
-        color: #2266bf;
-    }
-    </style>
     <script>
     const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
     Object.freeze(ModeEnum);
@@ -777,8 +656,6 @@
         chart.draw(data, options);
     }
     </script>
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 </head>
 <body>
     <div id="current_usage_div" class="current_usage_normal">
