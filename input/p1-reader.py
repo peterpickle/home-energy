@@ -12,7 +12,7 @@ import sys
 import serial
 import time
 
-MAX_DB_SAMPLES = (60 * 60 * 24) * 366
+MAX_DB_DEBUG_SAMPLES = 200
 NB_OF_TELEGRAM_LINES = 21
 
 # create logger
@@ -133,6 +133,9 @@ obisstrings = {
 #    ObisTag.TEXT_MESSAGE                : "Text message"
 }
 
+def p1_reader_debug(name, value):
+    db.debug(name, value)
+
 class Reader():
     pass
 
@@ -152,21 +155,22 @@ class SerialReader(Reader):
     def open(self):
         try:
             self.port.open()
-        except:
-            sys.exit("Error while opening serial port. port %s."  % self.port.name)
+        except Exception as e:
+            sys.exit(f'Error while opening serial port. port:"{self.port.name}" error:"{e}"')
 
     def close(self):
         try:
             self.port.close()
         except:
-            sys.exit("Error while closing serial port. port %s" % self.port.name)
+            sys.exit(f'Error while closing serial port. port:"{self.port.name}" error:"{e}"')
 
     def readline(self):
         line = ""
         try:
             line = self.port.readline()
+            p1_reader_debug('serial_input', line)
         except:
-            sys.exit("Error while reading from serial port. port %s" % self.port.name)
+            sys.exit(f'Error while reading from serial port. port:"{self.port.name}" error:"{e}"')
         return line
 
 class FileReader(Reader):
@@ -179,13 +183,13 @@ class FileReader(Reader):
         try:
              self.file = open(self.path_to_file, 'r')
         except:
-            sys.exit("Error while opening file. file %s"  % self.path_to_file)
+            sys.exit(f'Error while opening file. file:"{self.path_to_file}" error:"{e}"')
 
     def close(self):
         try:
             self.file.close()
         except:
-            sys.exit("Error while closing file. file %s" % self.path_to_file)
+            sys.exit(f'Error while closing file. file:"{self.path_to_file}" error:"{e}"')
 
     def readline(self):
         line = ""
@@ -193,12 +197,14 @@ class FileReader(Reader):
             line = self.file.readline()
             if len(line) == 0:
                 self.file.seek(0)
+            else:
+                p1_reader_debug('file_input', line)
             self.read_count += 1
             if (self.read_count == NB_OF_TELEGRAM_LINES):
                 time.sleep(1)
                 self.read_count = 0
-        except:
-            sys.exit("Error while reading from file. file %s" % self.path_to_file)
+        except Exception as e:
+            sys.exit(f'Error while reading from file. file:"{self.path_to_file}" error: "{e}"')
             self.file.close()
         return line.encode()
 
@@ -283,7 +289,7 @@ class Telegram:
                 elif value[-1] == 'W':
                     timezone = 'UTC+0100'
                 else:
-                    logger.error(f'Invalid timestamp. value: {value}')
+                    logger.error(f'Invalid timestamp. value:"{value}"')
 
                 value = value[:-1] + timezone
                 value = int(time.mktime(time.strptime(value, '%y%m%d%H%M%S%Z%z')))
@@ -320,7 +326,7 @@ class Database:
             fields[ObisTag.ALL_PHASES_PRODUCTION.name] = str(telegram.get_value(ObisTag.ALL_PHASES_PRODUCTION)[0])
             fields[ObisTag.ALL_PHASES_CONSUMPTION.name] = str(telegram.get_value(ObisTag.ALL_PHASES_CONSUMPTION)[0])
         except KeyError as e:
-            logger.error(f'Not all parsed values present. KeyError \'{e}\'')
+            logger.error(f'Not all parsed values present. KeyError:"{e}"')
             logger.error(f'Input')
             telegram.log_input()
             logger.error(f'Parsed Data')
@@ -345,6 +351,11 @@ class Database:
                       ])
 
         self.prev_telegram_key = timeKey
+
+    def debug(self, name, value):
+        fields = { }
+        fields[name] = str(value)
+        self.r.xadd("p1_reader_debug", fields, id='*', maxlen=MAX_DB_DEBUG_SAMPLES, approximate=True)
 
 '''
    Terminal
