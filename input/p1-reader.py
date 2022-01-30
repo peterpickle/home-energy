@@ -213,6 +213,7 @@ class FileReader(Reader):
 '''
 
 class Telegram:
+    end_regex = re.compile('^![0-9A-Fa-f]{4}$')
 
     def __init__(self):
         self.input_lines = []
@@ -224,24 +225,25 @@ class Telegram:
         #search for the start of the telegram
         while(True):
             rawLine = reader.readline()
-            line = rawLine.decode('ascii')
-            line = str(rawLine)
-            if "/" in line:
+            line = str(rawLine.decode('ascii'))
+            if line.startswith('/'):
                 #Found start of telegram
                 self.input_lines.append(line)
                 break
 
-        i = 0
-        while i < NB_OF_TELEGRAM_LINES - 1:
+        while(True):
             rawLine = reader.readline()
-            line = str(rawLine.decode('ascii')).strip()
+            line = str(rawLine.decode('ascii'))
             self.input_lines.append(line)
             #print(line)
-            i += 1
+            #if line.startswith('!'):
+            if Telegram.end_regex.match(line) != None:
+                #Found end of telegram
+                break
 
     def print_input(self):
         for line in self.input_lines:
-            print(line)
+            print(line.strip())
 
     def log_input(self):
         for line in self.input_lines:
