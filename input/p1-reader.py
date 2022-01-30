@@ -213,7 +213,7 @@ class FileReader(Reader):
 '''
 
 class Telegram:
-    end_regex = re.compile('^![0-9A-Fa-f]{4}$')
+    end_regex = re.compile('^![0-9A-Fa-f]{4}')
 
     def __init__(self):
         self.input_lines = []
