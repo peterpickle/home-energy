@@ -161,7 +161,7 @@ class SerialReader(Reader):
     def close(self):
         try:
             self.port.close()
-        except:
+        except Exception as e:
             sys.exit(f'Error while closing serial port. port:"{self.port.name}" error:"{e}"')
 
     def readline(self):
@@ -169,7 +169,7 @@ class SerialReader(Reader):
         try:
             line = self.port.readline()
             p1_reader_debug('serial_input', line)
-        except:
+        except Exception as e:
             sys.exit(f'Error while reading from serial port. port:"{self.port.name}" error:"{e}"')
         return line
 
@@ -182,13 +182,13 @@ class FileReader(Reader):
     def open(self):
         try:
              self.file = open(self.path_to_file, 'r')
-        except:
+        except Exception as e:
             sys.exit(f'Error while opening file. file:"{self.path_to_file}" error:"{e}"')
 
     def close(self):
         try:
             self.file.close()
-        except:
+        except Exception as e:
             sys.exit(f'Error while closing file. file:"{self.path_to_file}" error:"{e}"')
 
     def readline(self):
