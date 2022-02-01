@@ -12,6 +12,8 @@ import sys
 import serial
 import time
 
+FEATURE_GAS = 1
+
 MAX_DB_DEBUG_SAMPLES = 200
 NB_OF_TELEGRAM_LINES = 21
 
@@ -67,6 +69,7 @@ class ObisTag(Enum):
     VERSION = 26
     LIMITER_THRESHOLD = 27
     FUSE_SUPERVISION_THRESHOLD = 28
+    INTERNAL_GAS_TIMESTAMP = 29
 #    TEXT_MESSAGE = XX
 
 obistags = {
@@ -97,7 +100,8 @@ obistags = {
     "0-1:24.2.3"  : ObisTag.GAS_CONSUMPTION,
     "0-0:96.1.4"  : ObisTag.VERSION,
     "0-0:17.0.0"  : ObisTag.LIMITER_THRESHOLD,
-    "1-0:31.4.0"  : ObisTag.FUSE_SUPERVISION_THRESHOLD
+    "1-0:31.4.0"  : ObisTag.FUSE_SUPERVISION_THRESHOLD,
+    "INT_GAS_TIME": ObisTag.INTERNAL_GAS_TIMESTAMP
 #    "0-0:96.13.0" : ObisTag.TEXT_MESSAGE
 }
 
@@ -129,7 +133,8 @@ obisstrings = {
     ObisTag.GAS_CONSUMPTION             : "Gas consumption",
     ObisTag.VERSION                     : "Version",
     ObisTag.LIMITER_THRESHOLD           : "Limiter threshold",
-    ObisTag.FUSE_SUPERVISION_THRESHOLD  : "Fuse supervision threshold"
+    ObisTag.FUSE_SUPERVISION_THRESHOLD  : "Fuse supervision threshold",
+    ObisTag.INTERNAL_GAS_TIMESTAMP      : "Gas timestamp"
 #    ObisTag.TEXT_MESSAGE                : "Text message"
 }
 
@@ -218,9 +223,14 @@ class Telegram:
     def __init__(self):
         self.input_lines = []
         self.data = {}
+        self.parsed = False
+
+    def is_parsed(self):
+        return self.parsed
 
     def read(self, reader):
         self.input_lines = []
+        self.parsed = False
         
         #search for the start of the telegram
         while(True):
@@ -236,7 +246,6 @@ class Telegram:
             line = str(rawLine.decode('ascii'))
             self.input_lines.append(line)
             #print(line)
-            #if line.startswith('!'):
             if Telegram.end_regex.match(line) != None:
                 #Found end of telegram
                 break
@@ -246,14 +255,16 @@ class Telegram:
             print(line.strip())
 
     def log_input(self):
+        logger.error(f'Input')
         for line in self.input_lines:
-            logger.error(line)
+            logger.error(line.strip())
 
     def print_data(self):
         for key, value in self.data.items():
             print(f'{obisstrings[key]}, {value[0]}, {value[1]}')
 
     def log_data(self):
+        logger.error(f'Parsed Data')
         for key, value in self.data.items():
             logger.error(f'{obisstrings[key]}, {value[0]}, {value[1]}')
 
@@ -262,13 +273,19 @@ class Telegram:
 
     def parse_input(self):
         self.data.clear()
-        for line in self.input_lines:
-            self.parse_line(line)
+        self.parsed = False
+        try:
+            for line in self.input_lines:
+                self.parse_line(line)
+            self.parsed = True
+        except Exception as e:
+            logger.error(f'Parsing error. exception:"{e}"')
+            telegram.log_input()
+            telegram.log_data()
 
     def parse_line(self, line):
-        # parse a single line of the telegram and try to get relevant data from it
+        # parse a single line of the telegram
         unit = ""
-        timestamp = ""
         # get OBIS code from line (format:OBIS(value)
         obis = line.split("(")[0]
         # check if OBIS code is something we know and parse it
@@ -276,40 +293,59 @@ class Telegram:
             # get values from line.
             # format:OBIS(value), gas: OBIS(timestamp)(value)
             values = re.findall(r'\(.*?\)', line)
-            value = values[0][1:-1]
-            ## timestamp requires removal of last char
-            #if obis == "0-0:1.0.0" or len(values) > 1:
-            #    value = value[:-1]
-            if obis == "0-0:1.0.0":
-                ##don't parse the timestamp, take it as a string
-                #pass
 
-                #convert it to linux epoch time to avoid problems when daylight savings time ends in oktober and time goes backwards
-                #os.environ['TZ'] = 'UTC'
-                if value[-1] == 'S':
-                    timezone = 'UTC+0200'
-                elif value[-1] == 'W':
-                    timezone = 'UTC+0100'
-                else:
-                    logger.error(f'Invalid timestamp. value:"{value}"')
+            #remove parentheses
+            for i in range(len(values)):
+                values[i] = values[i][1:-1]
 
-                value = value[:-1] + timezone
-                value = int(time.mktime(time.strptime(value, '%y%m%d%H%M%S%Z%z')))
-            elif "96.1.1" in obis:
+            value = values[0]
+            if '24.2.3' in obis:
+                # gas consumption needs different parsing.
+                # It contains 2 values, a timestamp and the gas counter.
+                if len(values) != 2:
+                    logger.error(f'Gas consumtion only contains 1 value. line:"{line}"')
+                    telegram.log_input()
+                    return
+                # We parse and store the timestamp here
+                value = self.parse_timestamp(value)
+                self.data[ObisTag.INTERNAL_GAS_TIMESTAMP] = (value, unit)
+                #Set the gas counter as value and handle it normally
+                value = values[1]
+
+            if obis == '0-0:1.0.0':
+                value = self.parse_timestamp(value)
+            elif '96.1.1' in obis:
                 # serial numbers need different parsing: (hex to ascii)
                 value = bytearray.fromhex(value).decode()
             else:
                 # separate value and unit (format:value*unit)
-                lvalue = value.split("*")
+                lvalue = value.split('*')
                 value = float(lvalue[0])
                 if len(lvalue) > 1:
                     unit = lvalue[1]
-            self.data[obistags[obis]] = ((value, unit))
+
+            self.data[obistags[obis]] = (value, unit)
+
+    @staticmethod
+    def parse_timestamp(timestamp_string):
+        #convert it to linux epoch time to avoid problems when daylight savings time ends in oktober and time goes backwards
+        #os.environ['TZ'] = 'UTC'
+        if timestamp_string[-1] == 'S':
+            timezone = 'UTC+0200'
+        elif timestamp_string[-1] == 'W':
+            timezone = 'UTC+0100'
+        else:
+            logger.error(f'Invalid timestamp. timestamp_string:"{timestamp_string}"')
+
+        timestamp_string = timestamp_string[:-1] + timezone
+        epoch_time = int(time.mktime(time.strptime(timestamp_string, '%y%m%d%H%M%S%Z%z')))
+        return epoch_time
+
 
 class Database:
 
     def __init__(self):
-        self.prev_telegram_key = ''
+        pass
 
     def connect(self):
         self.r = redis.Redis(host='localhost',
@@ -329,9 +365,7 @@ class Database:
             fields[ObisTag.ALL_PHASES_CONSUMPTION.name] = str(telegram.get_value(ObisTag.ALL_PHASES_CONSUMPTION)[0])
         except KeyError as e:
             logger.error(f'Not all parsed values present. KeyError:"{e}"')
-            logger.error(f'Input')
             telegram.log_input()
-            logger.error(f'Parsed Data')
             telegram.log_data()
             return
 
@@ -352,8 +386,6 @@ class Database:
                        ("electricity_down_sec", timeKey, fields[ObisTag.ALL_PHASES_CONSUMPTION.name]) 
                       ])
 
-        self.prev_telegram_key = timeKey
-
     def debug(self, name, value):
         fields = { }
         fields[name] = str(value)
@@ -371,7 +403,8 @@ def clear_terminal():
 ##############################################################################
 
 reader = SerialReader()
-#reader = FileReader('test/telegram.txt')
+#reader = FileReader('test/telegram_elec.txt')
+#reader = FileReader('test/telegram_elec_and_gas.txt')
 reader.open()
 
 db = Database()
