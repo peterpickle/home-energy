@@ -345,7 +345,8 @@ class Telegram:
 class Database:
 
     def __init__(self):
-        pass
+        self.prev_gas_key = None
+        self.prev_gas_value = None
 
     def connect(self):
         self.r = redis.Redis(host='localhost',
@@ -385,6 +386,39 @@ class Database:
                        ("electricity_up_sec", timeKey, fields[ObisTag.ALL_PHASES_PRODUCTION.name]), 
                        ("electricity_down_sec", timeKey, fields[ObisTag.ALL_PHASES_CONSUMPTION.name]) 
                       ])
+
+        if FEATURE_GAS:
+            try:
+                gasTimeKey = telegram.get_value(ObisTag.INTERNAL_GAS_TIMESTAMP)[0] * 1000
+                gasValue = telegram.get_value(ObisTag.GAS_CONSUMPTION)[0]
+            except KeyError as e:
+                logger.error(f'Not all parsed gas values present. KeyError:"{e}"')
+                telegram.log_input()
+                telegram.log_data()
+                return
+
+            if self.prev_gas_key == None:
+                logger.debug(f'Storing first gas values gasTimeKey:{gasTimeKey} gasValue:{gasValue}')
+                self.prev_gas_key = gasTimeKey
+                self.prev_gas_value = gasValue
+                return
+
+            if gasValue < self.prev_gas_value:
+                logger.error('Received gas value was smaller than old value. '
+                             f'gasTimeKey:{gasTimeKey} gasValue:{gasValue} '
+                             f'prev_gas_key:{self.prev_gas_key} prev_gas_value:{self.prev_gas_value}')
+                self.prev_gas_key = gasTimeKey
+                self.prev_gas_value = gasValue
+                return
+
+            gasDiff = gasValue - self.prev_gas_value
+
+            if gasTimeKey != self.prev_gas_key or gasDiff != 0:
+                logger.info(f'Saving gasTimeKey:{gasTimeKey} gasDiff:{gasDiff}')
+                self.rts.add("gas_5min", gasTimeKey, gasDiff)
+
+            self.prev_gas_key = gasTimeKey
+            self.prev_gas_value = gasValue
 
     def debug(self, name, value):
         fields = { }

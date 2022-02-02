@@ -9,6 +9,13 @@ import sys
 import time
 
 FEATURE_PRODUCTION = 1
+FEATURE_GAS = 1
+
+#The buckset size should be a number that could used to divide 15 minutes
+day_bucket_size_msec = 3 * 60 * 1000
+if FEATURE_GAS:
+    day_bucket_size_msec = 5 * 60 * 1000
+
 
 class Mode(Enum):
     DAY = 1
@@ -86,8 +93,9 @@ def add_missing_data(entries, mode, value):
   ]
 }
 '''
-def generate_json_ouput(day, mode, total_day_up, total_day_down, peak_day_down, total_prod, 
-                        up_entries, down_entries, peak_down_entries, prod_entries):
+def generate_json_ouput(day, mode,
+                        total_day_up, total_day_down, peak_day_down, total_prod, total_gas,
+                        up_entries, down_entries, peak_down_entries, prod_entries, gas_entries):
     if mode == Mode.DAY:
         correction_factor = 1000
     elif mode == Mode.MONTH or mode == Mode.YEAR:
@@ -101,6 +109,8 @@ def generate_json_ouput(day, mode, total_day_up, total_day_down, peak_day_down, 
     result += '"peak_down": ' + str(peak_day_down) + ',\n'
     if FEATURE_PRODUCTION:
         result += '"total_prod": ' + str(total_prod) + ',\n'
+    if FEATURE_GAS:
+        result += '"total_gas": ' + str(total_gas) + ',\n'
 
     result += '"detailed_up_down" : [\n'
     for i, up_entry in enumerate(up_entries):
@@ -128,6 +138,17 @@ def generate_json_ouput(day, mode, total_day_up, total_day_down, peak_day_down, 
                     result += ',"p":null'
             else:
                 result += ',"p":null'
+
+            if FEATURE_GAS:
+                gas_entry = [item for item in gas_entries if item[0] == up_entry[0]]
+                if len(gas_entry):
+                    gas_entry = gas_entry[0]
+                    result += ',"g":' + str(gas_entry[1])
+                else:
+                    result += ',"g":null'
+            else:
+                result += ',"g":null'
+
             result += '}'
         else:
             print('Keys don\'t match for up and down entries. i ' + str(i) + ', up_key ' + str(up_entry[0]) + ', down_key ' + str(down_entry[0]))
@@ -180,19 +201,23 @@ r = redis.Redis(host='localhost',
 rts = redistimeseries.client.Client(r)
 
 prod_entries = []
+gas_entries = []
 
 #Get the detailed up/down data
 if mode == Mode.DAY:
     #Get usage per 2 minutes
     #TS.MRANGE - + AGGREGATION avg 120000 FILTER dir=(up,down) granularity=(1m,15m) GROUPBY dir REDUCE min
     #only query the needed granularity to make the query faster. The 15min data is kept forever, so no need to query the hourly data or the 1s data
-    mixed_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=180000, filters=['dir=(up,down)', 'granularity=(1m,15m)'], groupby='dir', reduce='min')
+    mixed_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=day_bucket_size_msec, filters=['dir=(up,down)', 'granularity=(1m,15m)'], groupby='dir', reduce='min')
     up_entries = get_entries(mixed_entries, 'dir', 'up')
     down_entries = get_entries(mixed_entries, 'dir', 'down')
     peak_down_entries = rts.range("electricity_down_15min", start_time, end_time)
     if FEATURE_PRODUCTION:
-        prod_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=180000, filters=['type=prod', 'granularity=(1m,15m)'], groupby='type', reduce='min')
+        prod_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=day_bucket_size_msec, filters=['type=prod', 'granularity=(1m,15m)'], groupby='type', reduce='min')
         prod_entries = get_entries(prod_entries, 'type', 'prod')
+    if FEATURE_GAS:
+        gas_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=day_bucket_size_msec, filters=['type=gas', 'granularity=(5m,15m)'], groupby='type', reduce='min')
+        gas_entries = get_entries(gas_entries, 'type', 'gas')
 elif mode == Mode.MONTH:
     mixed_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000, filters=['dir=(up,down)', 'granularity=1h'], groupby='dir', reduce='min')
     up_entries = get_entries(mixed_entries, 'dir', 'up')
@@ -201,6 +226,8 @@ elif mode == Mode.MONTH:
     if FEATURE_PRODUCTION:
         prod_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=86400000, filters=['type=prod', 'value=dayGen'], groupby='value', reduce='max')
         prod_entries = get_entries(prod_entries, 'value', 'dayGen')
+    if FEATURE_GAS:
+        gas_entries = rts.range("gas_15min", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000)
 elif mode == Mode.YEAR:
     up_entries = []
     down_entries = []
@@ -216,6 +243,9 @@ elif mode == Mode.YEAR:
         up_entries.extend(get_entries(mixed_entries, 'dir', 'up'))
         down_entries.extend(get_entries(mixed_entries, 'dir', 'down'))
         peak_down_entries.extend(rts.range("electricity_down_15min", month_start_epoch, month_end_epoch, align='start', aggregation_type='max', bucket_size_msec=month_bucket_size))
+
+        if FEATURE_GAS:
+            gas_entries.extend(rts.range("gas_15min", month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size))
 
         if FEATURE_PRODUCTION:
             prod_result = rts.range("electricity_prod_gen_daily_1day", month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size)
@@ -274,14 +304,24 @@ if FEATURE_PRODUCTION:
             if len(total_prod_result):
                 total_prod += total_prod_result[0][1]
 
+#total gas
+total_gas = 0
+if FEATURE_GAS:
+    total_gas_result = rts.range("gas_15min", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+    if len(total_gas_result):
+        total_gas = total_gas_result[0][1]
+
 #Add missing data at end
 up_entries = add_missing_data(up_entries, mode, 0.0)
 down_entries = add_missing_data(down_entries, mode, 0.0)
 peak_down_entries = add_missing_data(peak_down_entries, mode, 0.0)
 prod_entries = add_missing_data(prod_entries, mode, 'null')
+gas_entries = add_missing_data(gas_entries, mode, '0.0')
 
 #generate the output
-result = generate_json_ouput(day, mode, total_up, total_down, peak_down, total_prod, up_entries, down_entries, peak_down_entries, prod_entries)
+result = generate_json_ouput(day, mode,
+                            total_up, total_down, peak_down, total_prod, total_gas,
+                            up_entries, down_entries, peak_down_entries, prod_entries, gas_entries)
 
 print(result)
 

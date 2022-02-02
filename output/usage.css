@@ -8,6 +8,7 @@
 --yellow: #f7b32b;
 --dark-blue: #2266bf;
 --peak: #dc5665
+--gas: #cc1467
 */
 body
 {
@@ -114,4 +115,8 @@ body
 #data_field_total_cons_div
 {
     color: #2266bf;
+}
+#data_field_total_gas_div
+{
+    color: #cc1467;
 }

@@ -14,6 +14,11 @@
 
     var FEATURE_PRODUCTION = 1;
     var FEATURE_CONSUMPTION = 1;
+    var FEATURE_GAS = 1;
+
+    if (FEATURE_PRODUCTION == 0) {
+        FEATURE_CONSUMPTION = 0;
+    }
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
@@ -25,18 +30,22 @@
 
     var chartCreated = false;
 
-    var chartColors = ['#009FF5', '#8cea5d', '#f7B32b', '#dc5665', '#2266bf'];
+    var chartVaxisMultiple = 500;
+
+    var chartColors = ['#009FF5', '#8cea5d', '#f7B32b', '#dc5665', '#2266bf', '#cc1467'];
     var chartShowUp = true;
     var chartShowDown = true;
     var chartShowProd = true;
     var chartShowCons = false;
     var chartShowPeakDown = false;
+    var chartShowGas = false;
 
     var chartPrevShowUp;
     var chartPrevShowDown;
     var chartPrevShowProd;
     var chartPrevShowCons;
     var chartPrevShowPeakDown;
+    var chartPrevShowGas;
 
     Date.prototype.addDays = function (days) {
         const date = new Date(this.valueOf());
@@ -144,11 +153,16 @@
                     total_cons = result.total_down + result.total_prod - result.total_up;
                     $("#data_field_total_cons_div").html(get_fixed_digits(total_cons));
                 }
+                if (FEATURE_GAS)
+                {
+                    $("#data_field_total_gas_div").html(get_fixed_digits(result.total_gas));
+                }
 
                 // Create the data table
                 chartData = new google.visualization.DataTable();
                 p = null;
                 c = null;
+                g = null;
 
                 chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
                 chartData.addColumn('number', 'Down');
@@ -156,6 +170,7 @@
                 chartData.addColumn('number', 'Production');
                 chartData.addColumn('number', 'Peak Down');
                 chartData.addColumn('number', 'Consumption');
+                chartData.addColumn('number', 'Gas');
 
                 $.each(result.detailed_up_down, function(i, entry) {        
                     timestamp = new Date(entry.t);
@@ -173,12 +188,20 @@
                             c = entry.d + entry.p - entry.u;
                         }
                     }
+                    if (FEATURE_GAS) {
+                        if (entry.g) {
+                            g = entry.g
+                        } else {
+                            g = null;
+                        }
+                    }
                     chartData.addRow([timestamp,
                                       entry.d,
                                       (entry.u == 0) ? null : -entry.u,
                                       p,
                                       entry.pd,
-                                      c]);
+                                      c,
+                                      g]);
                 });
 
                 //How dates are displayed in the tooltips
@@ -216,7 +239,6 @@
         chartDisplayData = chartData.clone();
         if (!chartShowUp) {
             cId = chartDisplayData.getColumnIndex('Up');
-            //chartDisplayData.removeColumns(cId, 1);
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 chartDisplayData.setValue(rId, cId, null);
@@ -224,7 +246,6 @@
         }
         if (!chartShowDown) {
             cId = chartDisplayData.getColumnIndex('Down');
-            //chartDisplayData.removeColumns(cId, 1);
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 chartDisplayData.setValue(rId, cId, null);
@@ -232,7 +253,6 @@
         }
         if (!chartShowProd) {
             cId = chartDisplayData.getColumnIndex('Production');
-            //chartDisplayData.removeColumns(cId, 1);
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 chartDisplayData.setValue(rId, cId, null);
@@ -240,7 +260,6 @@
         }
         if (!chartShowCons) {
             cId = chartDisplayData.getColumnIndex('Consumption');
-            //chartDisplayData.removeColumns(cId, 1);
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 chartDisplayData.setValue(rId, cId, null);
@@ -248,7 +267,13 @@
         }
         if (!chartShowPeakDown) {
             cId = chartDisplayData.getColumnIndex('Peak Down');
-            //chartDisplayData.removeColumns(cId, 1);
+            nbOfRows = chartDisplayData.getNumberOfRows();
+            for (rId = 0;rId < nbOfRows; rId++) {
+                chartDisplayData.setValue(rId, cId, null);
+            }
+        }
+        if (!chartShowGas) {
+            cId = chartDisplayData.getColumnIndex('Gas');
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 chartDisplayData.setValue(rId, cId, null);
@@ -282,6 +307,22 @@
                 }
                 rId++;
             }
+        }
+
+        if (chartShowGas && mode == ModeEnum.DAY) {
+            chartVaxisMultiple = 1;
+            //Filter out the rows where gas is null. This gives wider bars.
+            cId1 = chartDisplayData.getColumnIndex('Gas');
+            for (rId = 0;rId < chartDisplayData.getNumberOfRows();) {
+                gas = chartDisplayData.getValue(rId, cId1);
+                if (gas == null) {
+                    chartDisplayData.removeRow(rId);
+                    continue;
+                }
+                rId++;
+            }
+        } else {
+            chartVaxisMultiple = 500;
         }
     }
 
@@ -372,7 +413,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
@@ -381,10 +421,17 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowPeakDown = chartPrevShowPeakDown;
 
                     //disable consumption data
                     chartShowCons = false;
+                } else if (chartShowGas) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+
+                    //disable gas data
+                    chartShowGas = false;
                 } else {
                     chartShowUp = !chartShowUp;
                 }
@@ -399,7 +446,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
@@ -408,10 +454,17 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowPeakDown = chartPrevShowPeakDown;
 
                     //disable consumption data
                     chartShowCons = false;
+                } else if (chartShowGas) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+
+                    //disable gas data
+                    chartShowGas = false;
                 } else {
                     chartShowDown = !chartShowDown;
                 }
@@ -426,7 +479,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowCons = chartPrevShowCons;
 
                     //disable peak data
                     chartShowPeakDown = false;
@@ -435,10 +487,17 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowPeakDown = chartPrevShowPeakDown;
 
                     //disable consumption data
                     chartShowCons = false;
+                } else if (chartShowGas) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+
+                    //disable gas data
+                    chartShowGas = false;
                 } else {
                     chartShowProd = !chartShowProd;
                 }
@@ -454,20 +513,25 @@
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
                     chartShowCons = chartPrevShowCons;
+                    chartShowGas = chartPrevShowGas;
                 } else if (chartShowCons) {
                     chartShowCons = false;
+                } else if (chartShowGas) {
+                    chartShowGas = false;
                 } else {
                     //save the current settings
                     chartPrevShowUp = chartShowUp;
                     chartPrevShowDown = chartShowDown;
                     chartPrevShowProd = chartShowProd;
                     chartPrevShowCons = chartShowCons;
+                    chartPrevShowGas = chartShowGas;
 
                     //disable other data
                     chartShowUp = false;
                     chartShowDown = false;
                     chartShowProd = false;
                     chartShowCons = false;
+                    chartShowGas = false;
                 }
                 chartShowPeakDown = !chartShowPeakDown;
                 showHideChartColumns();
@@ -482,22 +546,60 @@
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
                     chartShowPeakDown = chartPrevShowPeakDown;
+                    chartShowGas = chartPrevShowGas;
                 } else if (chartShowPeakDown) {
                     chartShowPeakDown = false;
+                } else if (chartShowGas) {
+                    chartShowGas = false;
                 } else {
                     //save the current settings
                     chartPrevShowUp = chartShowUp;
                     chartPrevShowDown = chartShowDown;
                     chartPrevShowProd = chartShowProd;
                     chartPrevShowPeakDown = chartShowPeakDown;
+                    chartPrevShowGas = chartShowGas;
 
                     //disable other data
                     chartShowUp = false;
                     chartShowDown = false;
                     chartShowProd = false;
                     chartShowPeakDown = false;
+                    chartShowGas = false;
                 }
                 chartShowCons = !chartShowCons;
+                showHideChartColumns();
+                drawChart(mode, chartDisplayData);
+            }
+        );
+        $("#data_field_total_gas_div").click(
+            function() {
+                if (chartShowGas) {
+                    //restore the saved settings
+                    chartShowUp = chartPrevShowUp;
+                    chartShowDown = chartPrevShowDown;
+                    chartShowProd = chartPrevShowProd;
+                    chartShowCons = chartPrevShowCons;
+                    chartShowPeakDown = chartPrevShowPeakDown;
+                } else if (chartShowPeakDown) {
+                    chartShowPeakDown = false;
+                } else if (chartShowCons) {
+                    chartShowCons = false;
+                } else {
+                    //save the current settings
+                    chartPrevShowUp = chartShowUp;
+                    chartPrevShowDown = chartShowDown;
+                    chartPrevShowProd = chartShowProd;
+                    chartPrevShowCons = chartShowCons;
+                    chartPrevShowPeakDown = chartShowPeakDown;
+
+                    //disable other data
+                    chartShowUp = false;
+                    chartShowDown = false;
+                    chartShowProd = false;
+                    chartShowCons = false;
+                    chartShowPeakDown = false;
+                }
+                chartShowGas = !chartShowGas;
                 showHideChartColumns();
                 drawChart(mode, chartDisplayData);
             }
@@ -530,7 +632,7 @@
                                 color: '#f4f4f9' 
                             },
                             gridlines: {  
-                                multiple: 500,
+                                multiple: chartVaxisMultiple,
                                 color: '#6e6e6e',
                             }, 
                             minorGridlines: { 
@@ -705,7 +807,7 @@
         </tr>
         <tr>
             <td><div id="data_field_total_cons_div" class="data_field"></div></td>
-            <td></td>
+            <td><div id="data_field_total_gas_div" class="data_field"></div></td>
         </tr>
     </table>
 </body>
