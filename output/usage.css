@@ -92,11 +92,20 @@ body
 }
 .data_field
 {
-    padding: 50px 50px 50px 50px;
+    padding: 80px 50px 0px 50px;
     font-size: 120pt;
     font-weight: 900;
 }
+.data_field_label
+{
+    padding: 0px 50px 0px 50px;
+    font-size: 20pt;
+}
 #data_field_total_down_div
+{
+    color: #009ff5;
+}
+#data_field_total_down_label_div
 {
     color: #009ff5;
 }
@@ -104,7 +113,15 @@ body
 {
     color: #8cea5d;
 }
+#data_field_total_up_label_div
+{
+    color: #8cea5d;
+}
 #data_field_peak_down_div
+{
+    color: #dc5665;
+}
+#data_field_peak_down_label_div
 {
     color: #dc5665;
 }
@@ -112,11 +129,23 @@ body
 {
     color: #f7b32b;
 }
+#data_field_total_prod_label_div
+{
+    color: #f7b32b;
+}
 #data_field_total_cons_div
 {
     color: #2266bf;
 }
+#data_field_total_cons_label_div
+{
+    color: #2266bf;
+}
 #data_field_total_gas_div
+{
+    color: #cc1467;
+}
+#data_field_total_gas_label_div
 {
     color: #cc1467;
 }

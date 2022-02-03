@@ -16,10 +16,6 @@
     var FEATURE_CONSUMPTION = 1;
     var FEATURE_GAS = 1;
 
-    if (FEATURE_PRODUCTION == 0) {
-        FEATURE_CONSUMPTION = 0;
-    }
-
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
 
@@ -310,7 +306,7 @@
         }
 
         if (chartShowGas && mode == ModeEnum.DAY) {
-            chartVaxisMultiple = 1;
+            chartVaxisMultiple = 0.01;
             //Filter out the rows where gas is null. This gives wider bars.
             cId1 = chartDisplayData.getColumnIndex('Gas');
             for (rId = 0;rId < chartDisplayData.getNumberOfRows();) {
@@ -328,6 +324,37 @@
 
     //controls
     window.onload = function() {
+        if (FEATURE_PRODUCTION == 0) {
+            FEATURE_CONSUMPTION = 0;
+        }
+
+        const data_fields = [];
+
+        data_fields.push({id:"data_field_total_down_div", label:"DOWN"});
+        data_fields.push({id:"data_field_total_up_div", label:"UP"});
+        data_fields.push({id:"data_field_peak_down_div", label:"PEAK"});
+        if (FEATURE_PRODUCTION) {
+            data_fields.push({id:"data_field_total_prod_div", label:"PRODUCTION"});
+        }
+        if (FEATURE_CONSUMPTION) {
+            data_fields.push({id:"data_field_total_cons_div", label:"CONSUMPTION"});
+        }
+        if (FEATURE_GAS) {
+            data_fields.push({id:"data_field_total_gas_div", label:"GAS (㎥)"});
+        }
+
+        var data_fields_table = document.getElementById("data_fields_table");
+        for (var i = 0, row; row = data_fields_table.rows[i]; i++) {
+           for (var j = 0, cell; cell = row.cells[j]; j++) {
+                if (data_fields.length) {
+                    data_field = data_fields.shift();
+                    cell.childNodes[0].id = data_field.id;
+                    cell.childNodes[1].id = data_field.id.slice(0, -3) + 'label_div';
+                    cell.childNodes[1].innerHTML = data_field.label;
+                }
+           }
+        }
+
         $("#mode_year_div").click(
             function() {
                 if (mode != ModeEnum.YEAR) {
@@ -408,35 +435,37 @@
         );
         $("#data_field_total_up_div").click(
             function() {
-                if (chartShowPeakDown) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                if (FEATURE_PRODUCTION) {
+                    if (chartShowPeakDown) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable peak data
-                    chartShowPeakDown = false;
-                } else if (chartShowCons) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                        //disable peak data
+                        chartShowPeakDown = false;
+                    } else if (chartShowCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable consumption data
-                    chartShowCons = false;
-                } else if (chartShowGas) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                        //disable consumption data
+                        chartShowCons = false;
+                    } else if (chartShowGas) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable gas data
-                    chartShowGas = false;
-                } else {
-                    chartShowUp = !chartShowUp;
+                        //disable gas data
+                        chartShowGas = false;
+                    } else {
+                        chartShowUp = !chartShowUp;
+                    }
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
                 }
-                showHideChartColumns();
-                drawChart(mode, chartDisplayData);
             }
         );
         $("#data_field_total_down_div").click(
@@ -474,35 +503,37 @@
         );
         $("#data_field_total_prod_div").click(
             function() {
-                if (chartShowPeakDown) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                if (FEATURE_PRODUCTION) {
+                    if (chartShowPeakDown) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable peak data
-                    chartShowPeakDown = false;
-                } else if (chartShowCons) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                        //disable peak data
+                        chartShowPeakDown = false;
+                    } else if (chartShowCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable consumption data
-                    chartShowCons = false;
-                } else if (chartShowGas) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
+                        //disable consumption data
+                        chartShowCons = false;
+                    } else if (chartShowGas) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
 
-                    //disable gas data
-                    chartShowGas = false;
-                } else {
-                    chartShowProd = !chartShowProd;
+                        //disable gas data
+                        chartShowGas = false;
+                    } else {
+                        chartShowProd = !chartShowProd;
+                    }
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
                 }
-                showHideChartColumns();
-                drawChart(mode, chartDisplayData);
             }
         );
         $("#data_field_peak_down_div").click(
@@ -540,68 +571,72 @@
         );
         $("#data_field_total_cons_div").click(
             function() {
-                if (chartShowCons) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
-                    chartShowPeakDown = chartPrevShowPeakDown;
-                    chartShowGas = chartPrevShowGas;
-                } else if (chartShowPeakDown) {
-                    chartShowPeakDown = false;
-                } else if (chartShowGas) {
-                    chartShowGas = false;
-                } else {
-                    //save the current settings
-                    chartPrevShowUp = chartShowUp;
-                    chartPrevShowDown = chartShowDown;
-                    chartPrevShowProd = chartShowProd;
-                    chartPrevShowPeakDown = chartShowPeakDown;
-                    chartPrevShowGas = chartShowGas;
+                if (FEATURE_CONSUMPTION) {
+                    if (chartShowCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowPeakDown = chartPrevShowPeakDown;
+                        chartShowGas = chartPrevShowGas;
+                    } else if (chartShowPeakDown) {
+                        chartShowPeakDown = false;
+                    } else if (chartShowGas) {
+                        chartShowGas = false;
+                    } else {
+                        //save the current settings
+                        chartPrevShowUp = chartShowUp;
+                        chartPrevShowDown = chartShowDown;
+                        chartPrevShowProd = chartShowProd;
+                        chartPrevShowPeakDown = chartShowPeakDown;
+                        chartPrevShowGas = chartShowGas;
 
-                    //disable other data
-                    chartShowUp = false;
-                    chartShowDown = false;
-                    chartShowProd = false;
-                    chartShowPeakDown = false;
-                    chartShowGas = false;
+                        //disable other data
+                        chartShowUp = false;
+                        chartShowDown = false;
+                        chartShowProd = false;
+                        chartShowPeakDown = false;
+                        chartShowGas = false;
+                    }
+                    chartShowCons = !chartShowCons;
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
                 }
-                chartShowCons = !chartShowCons;
-                showHideChartColumns();
-                drawChart(mode, chartDisplayData);
             }
         );
         $("#data_field_total_gas_div").click(
             function() {
-                if (chartShowGas) {
-                    //restore the saved settings
-                    chartShowUp = chartPrevShowUp;
-                    chartShowDown = chartPrevShowDown;
-                    chartShowProd = chartPrevShowProd;
-                    chartShowCons = chartPrevShowCons;
-                    chartShowPeakDown = chartPrevShowPeakDown;
-                } else if (chartShowPeakDown) {
-                    chartShowPeakDown = false;
-                } else if (chartShowCons) {
-                    chartShowCons = false;
-                } else {
-                    //save the current settings
-                    chartPrevShowUp = chartShowUp;
-                    chartPrevShowDown = chartShowDown;
-                    chartPrevShowProd = chartShowProd;
-                    chartPrevShowCons = chartShowCons;
-                    chartPrevShowPeakDown = chartShowPeakDown;
+                if (FEATURE_GAS) {
+                    if (chartShowGas) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowCons = chartPrevShowCons;
+                        chartShowPeakDown = chartPrevShowPeakDown;
+                    } else if (chartShowPeakDown) {
+                        chartShowPeakDown = false;
+                    } else if (chartShowCons) {
+                        chartShowCons = false;
+                    } else {
+                        //save the current settings
+                        chartPrevShowUp = chartShowUp;
+                        chartPrevShowDown = chartShowDown;
+                        chartPrevShowProd = chartShowProd;
+                        chartPrevShowCons = chartShowCons;
+                        chartPrevShowPeakDown = chartShowPeakDown;
 
-                    //disable other data
-                    chartShowUp = false;
-                    chartShowDown = false;
-                    chartShowProd = false;
-                    chartShowCons = false;
-                    chartShowPeakDown = false;
+                        //disable other data
+                        chartShowUp = false;
+                        chartShowDown = false;
+                        chartShowProd = false;
+                        chartShowCons = false;
+                        chartShowPeakDown = false;
+                    }
+                    chartShowGas = !chartShowGas;
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
                 }
-                chartShowGas = !chartShowGas;
-                showHideChartColumns();
-                drawChart(mode, chartDisplayData);
             }
         );
     }
@@ -796,18 +831,18 @@
         </div>
     </div>
     <br/>
-    <table id="data_fields_div" class="data_fields">
+    <table id="data_fields_table" class="data_fields">
         <tr>
-            <td><div id="data_field_total_down_div" class="data_field"></div></td>
-            <td><div id="data_field_total_up_div" class="data_field"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
         </tr>
         <tr>
-            <td><div id="data_field_peak_down_div" class="data_field"></div></td>
-            <td><div id="data_field_total_prod_div" class="data_field"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
         </tr>
         <tr>
-            <td><div id="data_field_total_cons_div" class="data_field"></div></td>
-            <td><div id="data_field_total_gas_div" class="data_field"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
         </tr>
     </table>
 </body>
