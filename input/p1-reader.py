@@ -175,7 +175,8 @@ class SerialReader(Reader):
             line = self.port.readline()
             p1_reader_debug('serial_input', line)
         except Exception as e:
-            sys.exit(f'Error while reading from serial port. port:"{self.port.name}" error:"{e}"')
+            logger.error(f'Error while reading from serial port. port:"{self.port.name}" error:"{e}"')
+            raise RuntimeError(f'Error while reading from serial port. port:"{self.port.name}" error:"{e}"') from e
         return line
 
 class FileReader(Reader):
@@ -209,8 +210,8 @@ class FileReader(Reader):
                 time.sleep(1)
                 self.read_count = 0
         except Exception as e:
-            sys.exit(f'Error while reading from file. file:"{self.path_to_file}" error: "{e}"')
-            self.file.close()
+            logger.error(f'Error while reading from file. file:"{self.path_to_file}" error:"{e}"')
+            raise RuntimeError(f'Error while reading from file. file:"{self.path_to_file}" error:"{e}"') from e
         return line.encode()
 
 '''
@@ -235,7 +236,7 @@ class Telegram:
         #search for the start of the telegram
         while(True):
             rawLine = reader.readline()
-            line = str(rawLine.decode('ascii'))
+            line = str(rawLine.decode('utf-8'))
             if line.startswith('/'):
                 #Found start of telegram
                 self.input_lines.append(line)
@@ -243,7 +244,7 @@ class Telegram:
 
         while(True):
             rawLine = reader.readline()
-            line = str(rawLine.decode('ascii'))
+            line = str(rawLine.decode('utf-8'))
             self.input_lines.append(line)
             #print(line)
             if Telegram.end_regex.match(line) != None:
@@ -449,15 +450,19 @@ Loop for terminal
 '''
 
 while True:
-    telegram = Telegram()
-    telegram.read(reader)
-    #clear_terminal()
-    print('\nInput:')
-    telegram.print_input()
-    telegram.parse_input()
-    print('\nParsed Data:')
-    telegram.print_data()
-    db.save_telegram(telegram)
+    try:
+        telegram = Telegram()
+        telegram.read(reader)
+        print('\nInput:')
+        telegram.print_input()
+        telegram.parse_input()
+        print('\nParsed Data:')
+        telegram.print_data()
+        db.save_telegram(telegram)
+    except Exception as e:
+        logger.error(f'Unknown error. exception:"{e}"')
+        telegram.log_input()
+        telegram.log_data()
 
 db.disconnect()
 reader.close()
