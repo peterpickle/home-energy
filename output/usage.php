@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>Home Energy</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7,7 +8,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link href="usage.css" rel="stylesheet" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
     const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
     Object.freeze(ModeEnum);
@@ -816,33 +817,33 @@
     </div>
     <div id="controls_div" class="controls">
         <div id="controls_prev_2_div" class="control_button">
-            <<
+            &lt;&lt;
         </div>
         <div id="controls_prev_1_div" class="control_button">
-            <
+            &lt;
         </div>
         <div id="day_date_div" class="day_date">
         </div>
         <div id="controls_next_1_div" class="control_button">
-            >
+            &gt;
         </div>
         <div id="controls_next_2_div" class="control_button">
-            >>
+            &gt;&gt;
         </div>
     </div>
     <br/>
     <table id="data_fields_table" class="data_fields">
         <tr>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
         </tr>
         <tr>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
         </tr>
         <tr>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
-            <td><div id="" class="data_field"></div><div id="" class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
         </tr>
     </table>
 </body>
