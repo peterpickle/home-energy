@@ -9,7 +9,8 @@
     #echo $date;
     #echo $mode;
 
-    $command=system("python get_detailed_usage.py " . $date . " " . $mode . " 2>&1");
+    $command = "python get_detailed_usage.py " . $date . " " . $mode . " 2>&1";
+    #$command=system($command);
     #$command = escapeshellcmd('python get_detailed_usage.py');
     $output = shell_exec($command);
     echo $output;
