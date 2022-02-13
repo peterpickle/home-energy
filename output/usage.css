@@ -95,11 +95,13 @@ body
     padding: 80px 50px 0px 50px;
     font-size: 120pt;
     font-weight: 900;
+    text-align: left;
 }
 .data_field_label
 {
     padding: 0px 50px 0px 50px;
     font-size: 20pt;
+    text-align: left;
 }
 #data_field_total_down_div
 {
