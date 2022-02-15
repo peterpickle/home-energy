@@ -1,7 +1,9 @@
 #ignore
-__pycache__/
+__pycache__
 *.rdb
 *.bak
+*.pyc
+db.sqlite3
 p1_error_log.txt
 production_error_log.txt
 

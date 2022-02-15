@@ -1,0 +1,9 @@
+<html>
+<head>
+    <title>P1 reader debug</title>    
+</head>
+<body>
+    {% for entry in debug_entries %}
+        {{ entry.time }}: {{ entry.location }} - {{ entry.message }}</br>
+    {% endfor %}
+</body>

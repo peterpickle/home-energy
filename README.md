@@ -96,8 +96,5 @@ This will create a file dump.rdb. This is your database. If you remove it, your 
 3. start production reader
 
 4. start the GUI
-   - Copy files to the location of the web-server
+   - deploy the directory'web' with django
 
-```
-sudo cp output/* to /var/www/html
-```

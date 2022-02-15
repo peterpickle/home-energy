@@ -1,12 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Home Energy</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link href="usage.css" rel="stylesheet" type="text/css">
+    <link rel="icon" href="{% static 'home_energy/favicon.ico' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'home_energy/apple-touch-icon.png' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'home_energy/usage.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
@@ -95,7 +96,7 @@
     }
 
     function getLatestUsage() {
-        $.getJSON("get_latest.php", function(latest) {
+        $.getJSON("latest", function(latest) {
             current_usage_div = document.getElementById("current_usage_div");
 
             if (latest.down > 3150) {
@@ -130,7 +131,7 @@
     function getDetailedUsage(dayDate) {
         detailedDate = dayDate;
         dayStr = dayDate.getFullYear() + '-' + (dayDate.getMonth() + 1).toString().padStart(2, '0') + '-' + dayDate.getDate().toString().padStart(2, '0');
-        $.getJSON("get_detailed_usage.php", 
+        $.getJSON("details", 
             {
                 date: dayStr,
                 mode: mode
