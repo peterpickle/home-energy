@@ -1,12 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Home Portal - Login{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{% static 'auth/auth.css' %}">
+{% endblock %}
 
 {% block content %}
-<form method="post">
-  {% csrf_token %}
-  {{ form.username }}</br>
-  {{ form.password }}</br>
-  <button type="submit">login</button>
-</form>
+<div class="wrapper">
+  <form method="post" class="form-signin">
+    <h2 class="form-signin-heading">Home Portal</h2>
+    {% csrf_token %}
+    <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control" placeholder="Username">
+    <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control" placeholder="Password">
+    <!--
+    <label class="checkbox">
+      <input type="checkbox" value="remember-me" id="rememberMe" name="rememberMe"> Remember me
+    </label>
+    -->
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+  </form>
+</div>
 {% endblock %}

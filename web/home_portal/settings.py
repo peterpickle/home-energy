@@ -58,7 +58,7 @@ ROOT_URLCONF = 'home_portal.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [str(BASE_DIR.joinpath('templates'))],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,7 +119,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
+# Tho locations where django should collect static files other than 'static' dirs in the apps
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]
+# The URL to use when refering to static files
 STATIC_URL = '/static/'
+# The location where static files are put for serving them after they have been collected
 STATIC_ROOT = '/var/www/html/static/'
 
 # Default primary key field type
