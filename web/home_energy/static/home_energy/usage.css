@@ -15,6 +15,7 @@ body
     font-family: Arial, Tahoma, sans-serif;
     text-align: center;
     background-color: #171216;
+    line-height: normal !important;
 }
 .current_usage_us
 {
@@ -56,34 +57,34 @@ body
     font-weight: 900;
     color: #dc5665;
 }
-.mode_button
-{
-    display: inline-block;
-    color: #f4f4f9;
-    padding: 50px 50px 0px 50px;
-    font-size: 20pt;
-    font-weight: 900;
-}
 .chart
 {
     text-align: center;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
 }
+.mode {
+    width: 720px;
+    margin-top: 30px;
+}
+.mode_button
+{
+    font-size: 25pt;
+}
+.controls
+{
+    width: 720px;
+    margin-top: 10px;
+}
 .day_date
 {
-    display: inline-block;
-    color: #f4f4f9;
-    font-size: 40pt;
-    font-weight: 900;
+    font-size: 30pt;
+    width: 40%;
 }
 .control_button
 {
-    display: inline-block;
-    color: #f4f4f9;
-    padding: 0px 50px 0px 50px;
-    font-size: 40pt;
-    font-weight: 900;
+    font-size: 30pt;
 }
 .data_fields
 {
@@ -92,14 +93,14 @@ body
 }
 .data_field
 {
-    padding: 80px 50px 0px 50px;
+    padding: 50px 50px 0px 50px;
     font-size: 120pt;
     font-weight: 900;
     text-align: left;
 }
 .data_field_label
 {
-    padding: 0px 50px 0px 50px;
+    padding: 0px 50px 30px 50px;
     font-size: 20pt;
     text-align: left;
 }
