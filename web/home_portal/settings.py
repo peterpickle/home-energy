@@ -31,6 +31,9 @@ ALLOWED_HOSTS = ['127.0.0.1']
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
+# Keep the session cookie valid for 14 days (in seconds)
+SESSION_COOKIE_AGE = 1209600
+
 # Application definition
 
 INSTALLED_APPS = [
