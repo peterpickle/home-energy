@@ -188,6 +188,15 @@ def get_epoch_time_ms(date):
 def get_epoch_end_time(start_epoch_time, days):
     return start_epoch_time + (days * 86400000) - 1
 
+def get_electricity_current_hour(rts, dir_str):
+    # Get the latest value in the 1h series.
+    latest_1h = rts.get("electricity_" + dir_str + "_1h")
+    # Use this time as a start time + 1h.
+    latest_hour_result = rts.range("electricity_" + dir_str + "_1min", latest_1h[0] + 3600000, latest_1h[0] + 7200000, align='start', aggregation_type='sum', bucket_size_msec=3600000)
+    if len(latest_hour_result):
+        return latest_hour_result[0][1] / 60
+    return 0
+
 def get_detailed_usage(date_str, mode_str):
     day = get_day(date_str)
     mode = get_mode(mode_str)
@@ -206,6 +215,7 @@ def get_detailed_usage(date_str, mode_str):
     else:
         raise ValueError("Invalid mode")
 
+    now = int(time.time() * 1000)
     start_time = get_epoch_time_ms(start_day)
     end_time = get_epoch_end_time(start_time, days)
     total_bucket_size = days * 86400000
@@ -266,10 +276,9 @@ def get_detailed_usage(date_str, mode_str):
             if FEATURE_PRODUCTION:
                 prod_result = rts.range("electricity_prod_gen_daily_1day", month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size)
                 #add the current day
-                now = int(time.time() * 1000)
                 if now >= month_start_epoch and now <= month_end_epoch:
                     now_start_day = now - (now % 86400000)
-                    today_prod_result = rts.range("electricity_prod_gen_daily_1min", now_start_day, now_start_day + 86400000, align='start', aggregation_type='max', bucket_size_msec=86400000)
+                    today_prod_result = rts.range("electricity_prod_gen_daily_1min", now_start_day, now_start_day + 86400000 -1, align='start', aggregation_type='max', bucket_size_msec=86400000)
                     if len(today_prod_result):
                         if len(prod_result):
                             #Add the production of the current day to the sum of the other days
@@ -291,6 +300,11 @@ def get_detailed_usage(date_str, mode_str):
         total_up = total_up_result[0][1]
     if len(total_down_result):
         total_down = total_down_result[0][1]
+    
+    if now >= start_time and now <= end_time:
+        #add the last/current hour
+        total_up += get_electricity_current_hour(rts, "up")
+        total_down += get_electricity_current_hour(rts, "down")
 
     #Get peak usage
     #TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
@@ -298,7 +312,7 @@ def get_detailed_usage(date_str, mode_str):
     peak_down_result = rts.range("electricity_down_15min", start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
     if len(peak_down_result):
         peak_down = peak_down_result[0][1]
-           
+
     #total production
     total_prod = 0
     if FEATURE_PRODUCTION:
@@ -312,7 +326,6 @@ def get_detailed_usage(date_str, mode_str):
             total_prod_result = rts.range("electricity_prod_gen_daily_1day", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
             if len(total_prod_result):
                 total_prod = total_prod_result[0][1]
-            now = int(time.time() * 1000)
             if now >= start_time and now <= end_time:
                 #add the current day
                 now_start_day = now - (now % 86400000)
