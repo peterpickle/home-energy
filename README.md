@@ -138,7 +138,7 @@ sudo mkdir /var/www/html/static
 
 #### 5. Copy the django project to the deploy location.
 ```
-cd CHECKOUT_DIR/home-portal
+cd CHECKOUT_DIR
 sudo cp -r web/* /deploy
 ```
 
@@ -221,8 +221,8 @@ git stash
 
 ### Copy the django project to the deploy location. (Step 5 of first deploy instructions.)
 ```
-cd CHECKOUT_DIR/home-portal
-sudo cp': sudo cp -r web/* /deploy
+cd CHECKOUT_DIR
+sudo cp -r web/* /deploy
 ```
 
 ### Collect static files. (Step 7 of first deploy instructions.)
