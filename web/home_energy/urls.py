@@ -8,12 +8,17 @@ urlpatterns = [
     path('', views.usage, name='usage'),
     # ex: /home-energy/usage.html
     path('usage.html', views.usage, name='usage'),
+
+    # ex: /home-energy/latest
     # ex: /home-energy/latest/
+    path('latest', views.latest, name='latest'),
     path('latest/', views.latest, name='latest'),
+
+    # ex: /home-energy/details
     # ex: /home-energy/details/
+    path('details', views.details, name='details'),
     path('details/', views.details, name='details'),
 
     # ex: /home-energy/debug/p1-reader.html
     path('debug/p1-reader.html', views.debug_p1_reader, name='debug_p1_reader'),
 ]
-    
