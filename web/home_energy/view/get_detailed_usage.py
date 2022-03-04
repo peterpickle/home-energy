@@ -307,11 +307,22 @@ def get_detailed_usage(date_str, mode_str):
         total_down += get_electricity_current_hour(rts, "down")
 
     #Get peak usage
-    #TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
+
     peak_down = 0
-    peak_down_result = rts.range("electricity_down_15min", start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
-    if len(peak_down_result):
-        peak_down = peak_down_result[0][1]
+    if mode != Mode.YEAR:
+        # Show the MAX peak
+        #TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
+        peak_down_result = rts.range("electricity_down_15min", start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
+        if len(peak_down_result):
+            peak_down = peak_down_result[0][1]
+    else:
+        # Show the AVG peak of the MAX of the months
+        nb_of_peak_entries = 0;
+        for month_peak_entry in peak_down_entries:
+            peak_down += month_peak_entry[1]
+            nb_of_peak_entries += 1
+        if nb_of_peak_entries != 0:
+            peak_down /= nb_of_peak_entries
 
     #total production
     total_prod = 0

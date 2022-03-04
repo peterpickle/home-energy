@@ -232,6 +232,13 @@
                     displayDateStr = detailedDate.toLocaleString('en', { year: 'numeric'});
                 }
                 $("#day_date_div").html(displayDateStr);
+
+                //adjust the labels
+                if (mode == ModeEnum.YEAR) {
+                    $("#data_field_peak_down_label_div").html("PEAK (avg)");
+                } else {
+                    $("#data_field_peak_down_label_div").html("PEAK (max)");
+                }
             });
     }
 
@@ -336,7 +343,7 @@
 
         data_fields.push({id:"data_field_total_down_div", label:"DOWN"});
         data_fields.push({id:"data_field_total_up_div", label:"UP"});
-        data_fields.push({id:"data_field_peak_down_div", label:"PEAK"});
+        data_fields.push({id:"data_field_peak_down_div", label:"PEAK (max)"});
         if (FEATURE_PRODUCTION) {
             data_fields.push({id:"data_field_total_prod_div", label:"PRODUCTION"});
         }
