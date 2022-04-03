@@ -338,8 +338,10 @@ class Telegram:
         else:
             logger.error(f'Invalid timestamp. timestamp_string:"{timestamp_string}"')
 
-        timestamp_string = timestamp_string[:-1] + timezone
-        epoch_time = int(time.mktime(time.strptime(timestamp_string, '%y%m%d%H%M%S%Z%z')))
+        timezone = 'UTC+0000'
+
+        timestamp_string = timestamp_string[:-1]
+        epoch_time = int(time.mktime(time.strptime(timestamp_string, '%y%m%d%H%M%S')))
         return epoch_time
 
 
