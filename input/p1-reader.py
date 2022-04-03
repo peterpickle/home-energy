@@ -232,7 +232,7 @@ class Telegram:
     def read(self, reader):
         self.input_lines = []
         self.parsed = False
-        
+
         #search for the start of the telegram
         while(True):
             rawLine = reader.readline()
@@ -330,18 +330,16 @@ class Telegram:
     @staticmethod
     def parse_timestamp(timestamp_string):
         #convert it to linux epoch time to avoid problems when daylight savings time ends in oktober and time goes backwards
-        #os.environ['TZ'] = 'UTC'
         if timestamp_string[-1] == 'S':
-            timezone = 'UTC+0200'
+            timezone = 'CEST+0200'
         elif timestamp_string[-1] == 'W':
-            timezone = 'UTC+0100'
+            timezone = 'CEST+0100'
         else:
             logger.error(f'Invalid timestamp. timestamp_string:"{timestamp_string}"')
 
-        timezone = 'UTC+0000'
-
-        timestamp_string = timestamp_string[:-1]
-        epoch_time = int(time.mktime(time.strptime(timestamp_string, '%y%m%d%H%M%S')))
+        timestamp_string = timestamp_string[:-1] + timezone
+        ts = time.strptime(timestamp_string, '%y%m%d%H%M%S%Z%z')
+        epoch_time = int(time.mktime(ts))
         return epoch_time
 
 
@@ -374,13 +372,13 @@ class Database:
             return
 
         #use the auto generated redis id (linux epoch in ms)
-        #timeKey=u'*' 
+        #timeKey=u'*'
 
         #use out own key, linux epoch in ms derived from the time of the measurement
         timeKey = str(telegram.get_value(ObisTag.TIMESTAMP)[0] * 1000)
 
         logger.info(f'Saving time:{timeKey} up:{fields[ObisTag.ALL_PHASES_PRODUCTION.name]} down:{fields[ObisTag.ALL_PHASES_CONSUMPTION.name]}')
-        
+
         #redis time series
         #self.rts.add("electricity_up_sec", timeKey, fields[ObisTag.ALL_PHASES_PRODUCTION.name])
         #self.rts.add("electricity_down_sec", timeKey, fields[ObisTag.ALL_PHASES_CONSUMPTION.name])
