@@ -18,6 +18,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('home-energy/', include('home_energy.urls')),
+    path('home-heating/', include('home_heating.urls')),
     path('admin/', admin.site.urls),
     path('auth/', include('django.contrib.auth.urls')),
 ]

@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.http import Http404
 from django.shortcuts import render
+
 from home_energy.view import get_latest
 from home_energy.view import get_detailed_usage
 from home_energy.view import p1_reader_debug
