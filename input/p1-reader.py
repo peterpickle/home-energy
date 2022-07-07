@@ -15,7 +15,7 @@ import time
 
 # read settings
 settings = configparser.ConfigParser()
-settings.read('../settings.txt')
+settings.read('../web/settings.txt')
 
 FEATURE_GAS = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
 

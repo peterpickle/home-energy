@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 
+import configparser
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +35,10 @@ SESSION_COOKIE_SECURE = not DEBUG
 
 # Keep the session cookie valid for 14 days (in seconds)
 SESSION_COOKIE_AGE = 1209600
+
+# Import global settings file
+GLOBAL_SETTINGS = configparser.ConfigParser()
+GLOBAL_SETTINGS.read('settings.txt')
 
 # Application definition
 

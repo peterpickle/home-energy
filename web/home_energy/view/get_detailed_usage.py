@@ -8,8 +8,17 @@ import redistimeseries.client
 import sys
 import time
 
-FEATURE_PRODUCTION = 1
-FEATURE_GAS = 1
+from django.conf import settings
+
+if not settings.configured:
+    settings.configure()
+
+try:
+    FEATURE_PRODUCTION = settings.GLOBAL_SETTINGS.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
+    FEATURE_GAS = settings.GLOBAL_SETTINGS.getint('FEATURE_FLAGS', 'GAS', fallback=1)
+except:
+    FEATURE_PRODUCTION = 1
+    FEATURE_GAS = 1
 
 #The buckset size should be a number that could used to divide 15 minutes
 day_bucket_size_msec = 3 * 60 * 1000

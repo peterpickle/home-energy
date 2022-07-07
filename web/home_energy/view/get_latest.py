@@ -4,7 +4,15 @@ import redis
 import redistimeseries.client
 import time
 
-FEATURE_PRODUCTION = 1
+from django.conf import settings
+
+if not settings.configured:
+    settings.configure()
+
+try:
+    FEATURE_PRODUCTION = settings.GLOBAL_SETTINGS.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
+except:
+    FEATURE_PRODUCTION = 1
 
 def generate_json_ouput(up, down, predicted_peak_down, prod=0):
     result = '{\n'
