@@ -16,9 +16,9 @@
     const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
     Object.freeze(ModeEnum);
 
-    var FEATURE_PRODUCTION = 1;
-    var FEATURE_CONSUMPTION = 1;
-    var FEATURE_GAS = 1;
+    var FEATURE_CONSUMPTION = {{ FEATURE_CONSUMPTION }};
+    var FEATURE_GAS = {{ FEATURE_GAS }};
+    var FEATURE_PRODUCTION = {{ FEATURE_PRODUCTION }};
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
