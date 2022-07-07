@@ -37,8 +37,13 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_AGE = 1209600
 
 # Import global settings file
-GLOBAL_SETTINGS = configparser.ConfigParser()
-GLOBAL_SETTINGS.read('settings.txt')
+settings = configparser.ConfigParser()
+settings.read('settings.txt')
+
+# Convert setting from external file in variables
+FEATURE_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'CONSUMPTION', fallback=1)
+FEATURE_GAS         = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
+FEATURE_PRODUCTION  = settings.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
 
 # Application definition
 
