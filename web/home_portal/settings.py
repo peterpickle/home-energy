@@ -38,7 +38,7 @@ SESSION_COOKIE_AGE = 1209600
 
 # Import global settings file
 settings = configparser.ConfigParser()
-settings.read('settings.txt')
+settings.read(BASE_DIR / 'settings.txt')
 
 # Convert setting from external file in variables
 FEATURE_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'CONSUMPTION', fallback=1)
