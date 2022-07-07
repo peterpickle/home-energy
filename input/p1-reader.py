@@ -3,6 +3,7 @@
 # DSMR v5.0 P1 reader
 
 from enum import Enum
+import configparser
 import logging
 import os
 import re
@@ -12,7 +13,11 @@ import sys
 import serial
 import time
 
-FEATURE_GAS = 1
+# read settings
+settings = configparser.ConfigParser()
+settings.read('../settings.txt')
+
+FEATURE_GAS = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
 
 MAX_DB_DEBUG_SAMPLES = 200
 NB_OF_TELEGRAM_LINES = 21
