@@ -13,6 +13,11 @@ import socket
 import sys
 import time
 
+#Get the relative path from the script
+dirname = os.path.dirname(__file__)
+#settingsFile = os.path.join(dirname, '../web/settings.txt')
+errorLogFile = os.path.join(dirname, 'production_error_log.txt')
+
 # create logger
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -22,7 +27,7 @@ consoleHandler = logging.StreamHandler()
 consoleHandler.setLevel(logging.DEBUG)
 
 # create file handler and set level to error
-fileHandler = logging.FileHandler('production_error_log.txt')
+fileHandler = logging.FileHandler(errorLogFile)
 fileHandler.setLevel(logging.ERROR)
 
 # create formatter

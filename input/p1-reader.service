@@ -1,0 +1,11 @@
+[Unit]
+Description=P1 reader service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python p1-reader.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

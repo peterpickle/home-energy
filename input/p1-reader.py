@@ -13,9 +13,14 @@ import sys
 import serial
 import time
 
+#Get the relative path from the script
+dirname = os.path.dirname(__file__)
+settingsFile = os.path.join(dirname, '../web/settings.txt')
+errorLogFile = os.path.join(dirname, 'p1_error_log.txt')
+
 # read settings
 settings = configparser.ConfigParser()
-settings.read('../web/settings.txt')
+settings.read(settingsFile)
 
 FEATURE_GAS = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
 
@@ -31,7 +36,7 @@ consoleHandler = logging.StreamHandler()
 consoleHandler.setLevel(logging.DEBUG)
 
 # create file handler and set level to error
-fileHandler = logging.FileHandler('p1_error_log.txt')
+fileHandler = logging.FileHandler(errorLogFile)
 fileHandler.setLevel(logging.ERROR)
 
 # create formatter
@@ -257,8 +262,9 @@ class Telegram:
                 break
 
     def print_input(self):
+        logger.debug(f'Input')
         for line in self.input_lines:
-            print(line.strip())
+            logger.debug(line.strip())
 
     def log_input(self):
         logger.error(f'Input')
@@ -266,8 +272,9 @@ class Telegram:
             logger.error(line.strip())
 
     def print_data(self):
+        logger.debug('Parsed Data:')
         for key, value in self.data.items():
-            print(f'{obisstrings[key]}, {value[0]}, {value[1]}')
+            logger.debug(f'{obisstrings[key]}, {value[0]}, {value[1]}')
 
     def log_data(self):
         logger.error(f'Parsed Data')
@@ -458,10 +465,8 @@ while True:
     try:
         telegram = Telegram()
         telegram.read(reader)
-        print('\nInput:')
         telegram.print_input()
         telegram.parse_input()
-        print('\nParsed Data:')
         telegram.print_data()
         db.save_telegram(telegram)
     except Exception as e:
