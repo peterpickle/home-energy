@@ -343,14 +343,14 @@ class Telegram:
     def parse_timestamp(timestamp_string):
         #convert it to linux epoch time to avoid problems when daylight savings time ends in oktober and time goes backwards
         if timestamp_string[-1] == 'S':
-            timezone = 'CEST+0200'
+            timezone = '+0200'
         elif timestamp_string[-1] == 'W':
-            timezone = 'CEST+0100'
+            timezone = '+0100'
         else:
             logger.error(f'Invalid timestamp. timestamp_string:"{timestamp_string}"')
 
         timestamp_string = timestamp_string[:-1] + timezone
-        ts = time.strptime(timestamp_string, '%y%m%d%H%M%S%Z%z')
+        ts = time.strptime(timestamp_string, '%y%m%d%H%M%S%z')
         epoch_time = int(time.mktime(ts))
         return epoch_time
 
