@@ -187,7 +187,7 @@ while True:
             logger.error(f'Received message with unexpected inverter serial. offset:{offset}  length:{len(data)} data:"{data}"')
             continue
 
-        invMsg.printData()
+        invMsg.printData(logger)
         db.save_inverter_msg(invMsg)
 
         if offset != 0:
