@@ -6,6 +6,6 @@ from django.shortcuts import render
 from home_heating.view import ebusd_reader
 
 @login_required
-def ebus(request):
+def debug_ebus(request):
     return HttpResponse(ebusd_reader.read_all_ebus_values(), content_type="application/json")
 
