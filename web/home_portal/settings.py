@@ -41,9 +41,10 @@ settings = configparser.ConfigParser()
 settings.read(BASE_DIR / 'settings.txt')
 
 # Convert setting from external file in variables
-FEATURE_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'CONSUMPTION', fallback=1)
-FEATURE_GAS         = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
-FEATURE_PRODUCTION  = settings.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
+FEATURE_CONSUMPTION       = settings.getint('FEATURE_FLAGS', 'CONSUMPTION', fallback=1)
+FEATURE_GAS               = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
+FEATURE_PRODUCTION        = settings.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
+FEATURE_SOLAR_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'SOLAR_CONSUMPTION', fallback=1)
 
 # Application definition
 

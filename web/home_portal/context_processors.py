@@ -6,4 +6,5 @@ def feature_flags(request):
             'FEATURE_CONSUMPTION': settings.FEATURE_CONSUMPTION,
             'FEATURE_GAS': settings.FEATURE_GAS,
             'FEATURE_PRODUCTION': settings.FEATURE_PRODUCTION,
+            'FEATURE_SOLAR_CONSUMPTION': settings.FEATURE_SOLAR_CONSUMPTION,
             }
