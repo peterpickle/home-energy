@@ -48,69 +48,68 @@ class RETURN_TYPE(Enum):
 
 class Ebus():
 
-	def __init__(self, host, port):
-		self.host = host
-		self.port = port
-		self.socket = None
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = None
 
-	def open(self):
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.settimeout(5)
-		self.socket.connect((self.host, self.port))
+    def open(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(5)
+        self.socket.connect((self.host, self.port))
 
-	def close(self):
-		self.socket.close()
+    def close(self):
+        self.socket.close()
 
-	def read(self, circuit, name, type=RETURN_TYPE.ANY, ttl=300):
-		if self.socket is None:
-			return None
+    def read(self, circuit, name, type=RETURN_TYPE.ANY, ttl=300):
+        if self.socket is None:
+            return None
 
-		result = None
-		""" Send the command """
-		READ_COMMAND = 'read -m {2} -c {0} {1}\n'
-		command = READ_COMMAND.format(circuit, name, ttl)
-		self.socket.sendall(command.encode())
+        result = None
+        """ Send the command """
+        READ_COMMAND = 'read -m {2} -c {0} {1}\n'
+        command = READ_COMMAND.format(circuit, name, ttl)
+        self.socket.sendall(command.encode())
 
-		""" Get the result decoded UTF-8 """
-		result = self.socket.recv(256).decode('utf-8').rstrip()
-		if 'ERR:' not in result and type != RETURN_TYPE.ANY:
-			result = self.humanize(type, result)
+        """ Get the result decoded UTF-8 """
+        result = self.socket.recv(256).decode('utf-8').rstrip()
+        if 'ERR:' not in result and type != RETURN_TYPE.ANY:
+            result = self.humanize(type, result)
 
-		return result
+        return result
 
-	def write(self, circuit, name, value):
-		if self.socket is None:
-			return None
+    def write(self, circuit, name, value):
+        if self.socket is None:
+            return None
 
-		result = None
-		""" Send the command """
-		WRITE_COMMAND = 'write -c {0} {1} {2}\n'
-		command = WRITE_COMMAND.format(circuit, name, value)
-		self.socket.sendall(command.encode())
-		""" Get the result decoded UTF-8 """
-		result = self.socket.recv(256).decode('utf-8').rstrip()
+        result = None
+        """ Send the command """
+        WRITE_COMMAND = 'write -c {0} {1} {2}\n'
+        command = WRITE_COMMAND.format(circuit, name, value)
+        self.socket.sendall(command.encode())
+        """ Get the result decoded UTF-8 """
+        result = self.socket.recv(256).decode('utf-8').rstrip()
 
-		return result
+        return result
 
-	def humanize(self, type, value):
-		_state = None
-		if type == RETURN_TYPE.FLOAT:
-			_state = format(
-				float(value), '.3f')
-		elif type == RETURN_TYPE.RANGE:
-			_state = value.replace(';-:-', '')
-		elif type == RETURN_TYPE.BOOL:
-			if value == 1 or value == 'on':
-				_state = 'on'
-			else:
-				_state = 'off'
-		elif type == RETURN_TYPE.ANY:
-			return value
-		elif type == RETURN_TYPE.FIVE:
-			if 'ok' not in value.split(';'):
-				return
-			_state = value.partition(';')[0]
-		return _state
+    def humanize(self, type, value):
+        _state = None
+        if type == RETURN_TYPE.FLOAT:
+            _state = format(float(value), '.3f')
+        elif type == RETURN_TYPE.RANGE:
+            _state = value.replace(';-:-', '')
+        elif type == RETURN_TYPE.BOOL:
+            if value == 1 or value == 'on':
+                _state = 'on'
+            else:
+                _state = 'off'
+        elif type == RETURN_TYPE.ANY:
+            return value
+        elif type == RETURN_TYPE.FIVE:
+            if 'ok' not in value.split(';'):
+                return
+            _state = value.partition(';')[0]
+        return _state
 
 read_fields = [
     # circuit, fieldname, return type, max cache age
@@ -187,19 +186,19 @@ read_fields = [
 ]
 
 def read_all_ebus_values():
-	ebus = Ebus(EBUSD_HOST, EBUSD_PORT)
-	ebus.open()
+    ebus = Ebus(EBUSD_HOST, EBUSD_PORT)
+    ebus.open()
 
-	result_dict = { }
+    result_dict = { }
 
-	for field in read_fields:
-		value = ebus.read(field[0], field[1], field[2], field[3]);
-		#print(f'{field[1]}: {value}')
-		result_dict[field[1]] = value
+    for field in read_fields:
+        value = ebus.read(field[0], field[1], field[2], field[3]);
+        #print(f'{field[1]}: {value}')
+        result_dict[field[1]] = value
 
-	ebus.close()
+    ebus.close()
 
-	return json.dumps(result_dict, separators=(',\n', ': '))
+    return json.dumps(result_dict, separators=(',\n', ': '))
 
 if __name__ == '__main__':
     # file executed as script
