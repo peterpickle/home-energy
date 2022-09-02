@@ -20,4 +20,3 @@ def set(request, circuit, field, value):
 @login_required
 def debug_ebus(request):
     return HttpResponse(ebusd_reader.read_all_ebus_values(), content_type="application/json")
-

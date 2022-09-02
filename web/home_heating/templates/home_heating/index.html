@@ -8,12 +8,51 @@
     <link rel="icon" href="{% static 'home_heating/favicon.ico' %}" sizes="any">
     <link rel="apple-touch-icon" href="{% static 'home_heating/apple-touch-icon.png' %}">
     <link rel="stylesheet" href="{% static 'home_heating/index.css' %}">
-    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+    function getEbusValue(circuit, field) {
+        url = "get/" + circuit + "/" + field;
+        $.getJSON(url,
+            function(value) {
+                display_div = document.getElementById("current_" + circuit + "_" + field + "_div");
+                display_div.innerHTML = value;
+            }
+        );
+    }
+
+    function getAllEbusValues() {
+        getEbusValue("700", "z1RoomTemp");
+        getEbusValue("700", "z1DayTemp");
+        getEbusValue("700", "z1NightTemp");
+        getEbusValue("700", "z1ActualRoomTempDesired");
+        getEbusValue("700", "DisplayedOutsideTemp");
+        getEbusValue("hmu", "State");
+
+        getEbusValue("700", "HwcStorageTemp");
+        getEbusValue("700", "HwcTempDesired");
+    }
+
+    getAllEbusValues();
+
+    window.onload = function() {
+        $("h2").click(function() {
+            getAllEbusValues()
+        });
+    }
 
     </script>
 </head>
 <body>
-    Index
+    <h2>Heating</h2>
+    Room temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div><br/>
+    Day temp: <div id="current_700_z1DayTemp_div" class="current_value"></div><br/>
+    Night temp: <div id="current_700_z1NightTemp_div" class="current_value"></div><br/>
+    Desired temp: <div id="current_700_z1ActualRoomTempDesired_div" class="current_value"></div><br/>
+    Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div><br/>
+    State: <div id="current_hmu_State_div" class="current_value"></div><br/>
+
+    <h2>Water</h2>
+    Current temp: <div id="current_700_HwcStorageTemp_div" class="current_value"></div><br/>
+    Desired temp: <div id="current_700_HwcTempDesired_div" class="current_value"></div><br/>
 </body>
 </html>

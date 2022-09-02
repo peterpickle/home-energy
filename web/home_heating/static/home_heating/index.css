@@ -1,20 +1,12 @@
-/* color palette
-  https://coolors.co/
---up: #8cea5d;
---black: #171216;
---down: #009ff5;
---maximum-yellow-red: #ffc95c;
---white: #f4f4f9;
---yellow: #f7b32b;
---dark-blue: #2266bf;
---peak: #dc5665
---gas: #cc1467
---solar-consumption: #78bc61
-*/
 body
 {
     font-family: Arial, Tahoma, sans-serif;
+    font-size: 40pt;
     text-align: center;
     background-color: #ffffff;
     line-height: normal !important;
+}
+.current_value
+{
+    display: inline-block;
 }
