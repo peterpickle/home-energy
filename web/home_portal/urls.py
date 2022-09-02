@@ -13,12 +13,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+if not settings.configured:
+    settings.configure(FEATURE_HEATING_APP=1)
+
 urlpatterns = [
     path('home-energy/', include('home_energy.urls')),
-    path('home-heating/', include('home_heating.urls')),
     path('admin/', admin.site.urls),
     path('auth/', include('django.contrib.auth.urls')),
 ]
+
+if settings.FEATURE_HEATING_APP:
+    urlpatterns.append(path('home-heating/', include('home_heating.urls')))

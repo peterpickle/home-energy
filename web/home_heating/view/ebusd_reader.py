@@ -200,6 +200,22 @@ def read_all_ebus_values():
 
     return json.dumps(result_dict, separators=(',\n', ': '))
 
+def read(circuit, field):
+    #TODO: validate input (circuit exists, field exists, readable, )
+    ebus = Ebus(EBUSD_HOST, EBUSD_PORT)
+    ebus.open()
+    value = ebus.read(circuit, field);
+    ebus.close()
+    return json.dumps(value)
+
+def write(circuit, field, value):
+    #TODO: validate input (circuit exists, field exists, writable, format and range of value)
+    ebus = Ebus(EBUSD_HOST, EBUSD_PORT)
+    ebus.open()
+    value = ebus.write(circuit, field, value);
+    ebus.close()
+    return json.dumps(value)
+
 if __name__ == '__main__':
     # file executed as script
     result = read_all_ebus_values()

@@ -45,6 +45,7 @@ FEATURE_CONSUMPTION       = settings.getint('FEATURE_FLAGS', 'CONSUMPTION', fall
 FEATURE_GAS               = settings.getint('FEATURE_FLAGS', 'GAS', fallback=1)
 FEATURE_PRODUCTION        = settings.getint('FEATURE_FLAGS', 'PRODUCTION', fallback=1)
 FEATURE_SOLAR_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'SOLAR_CONSUMPTION', fallback=1)
+FEATURE_HEATING_APP       = settings.getint('FEATURE_FLAGS', 'HEATING_APP', fallback=1)
 
 # Application definition
 
