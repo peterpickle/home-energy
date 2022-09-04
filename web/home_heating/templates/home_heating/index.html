@@ -26,11 +26,29 @@
         url = "get/" + circuit + "/" + field;
         $.getJSON(url,
             function(value) {
-                outputFieldName = getFieldOutputName(field);
-                display_div = document.getElementById("current_" + circuit + "_" + outputFieldName + "_div");
-                display_div.innerHTML = value;
+                updateValueInUI(circuit, getFieldOutputName(field), value);
             }
         );
+    }
+
+    function setEbusValue(circuit, field, value) {
+        url = "set/" + circuit + "/" + field+ "/" + value;
+        $.getJSON(url,
+            function(response) {
+                if (response == "done") {
+                    updateValueInUI(circuit, getFieldOutputName(field), value);
+                }
+            }
+        );
+    }
+
+    function incValue(circuit, field, incValue) {
+        currentValue = parseFloat($("#current_"+ circuit + "_" + field + "_div").text());
+        if (currentValue == "NaN") {
+            return;
+        }
+        newValue = currentValue + incValue;
+        setEbusValue(circuit, field, newValue);
     }
 
     function getAllEbusValues() {
@@ -52,11 +70,43 @@
         getEbusValue("hmu", "currenterror");
     }
 
+    function updateValueInUI(circuit, field, newValue) {
+        $("#current_"+ circuit + "_" + outputFieldName + "_div").text(newValue);
+    }
+
     getAllEbusValues();
 
     window.onload = function() {
         $("h2").click(function() {
-            getAllEbusValues()
+            getAllEbusValues();
+        });
+
+        $("#dec_700_z1DayTemp").click(function() {
+            incValue("700", "z1DayTemp", -0.5);
+        });
+        $("#inc_700_z1DayTemp").click(function() {
+            incValue("700", "z1DayTemp", +0.5);
+        });
+
+        $("#dec_700_z1NightTemp").click(function() {
+            incValue("700", "z1NightTemp", -0.5);
+        });
+        $("#inc_700_z1NightTemp").click(function() {
+            incValue("700", "z1NightTemp", +0.5);
+        });
+
+        $("#dec_700_HwcTempDesired").click(function() {
+            incValue("700", "HwcTempDesired", -1);
+        });
+        $("#inc_700_HwcTempDesired").click(function() {
+            incValue("700", "HwcTempDesired", +1);
+        });
+
+        $("#dec_700_CylinderChargeHyst").click(function() {
+            incValue("700", "CylinderChargeHyst", -1);
+        });
+        $("#inc_700_CylinderChargeHyst").click(function() {
+            incValue("700", "CylinderChargeHyst", +1);
         });
     }
 
@@ -64,18 +114,38 @@
 </head>
 <body>
     <h2>Heating</h2>
-    Room temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div><br/>
-    Day temp: <div id="current_700_z1DayTemp_div" class="current_value"></div><br/>
-    Night temp: <div id="current_700_z1NightTemp_div" class="current_value"></div><br/>
+    Room temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div>
+    <br/>
+
+    <input type="button" id="dec_700_z1DayTemp" value="-"/>
+    Day temp: <div id="current_700_z1DayTemp_div" class="current_value"></div>
+    <input type="button" id="inc_700_z1DayTemp" value="+"/>
+    <br/>
+
+    <input type="button" id="dec_700_z1NightTemp" value="-"/>
+    Night temp: <div id="current_700_z1NightTemp_div" class="current_value"></div>
+    <input type="button" id="inc_700_z1NightTemp" value="+"/>
+    <br/>
+
     Desired temp: <div id="current_700_z1ActualRoomTempDesired_div" class="current_value"></div><br/>
     Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div><br/>
     Shedule: <div id="current_700_z1Timer_div" class="current_value"></div><br/>
     <!-- TODO: show humidity -->
 
     <h2>Water</h2>
-    Current temp: <div id="current_700_HwcStorageTemp_div" class="current_value"></div><br/>
-    Desired temp: <div id="current_700_HwcTempDesired_div" class="current_value"></div><br/>
-    Hyst: <div id="current_700_CylinderChargeHyst_div" class="current_value"></div><br/>
+    Current temp: <div id="current_700_HwcStorageTemp_div" class="current_value"></div>
+    <br/>
+
+    <input type="button" id="dec_700_HwcTempDesired" value="-"/>
+    Desired temp: <div id="current_700_HwcTempDesired_div" class="current_value"></div>
+    <input type="button" id="inc_700_HwcTempDesired" value="+"/>
+    <br/>
+
+    <input type="button" id="dec_700_CylinderChargeHyst" value="-"/>
+    Hyst: <div id="current_700_CylinderChargeHyst_div" class="current_value"></div>
+    <input type="button" id="inc_700_CylinderChargeHyst" value="+"/>
+    <br/>
+
     Mode: <div id="current_700_HwcOpMode_div" class="current_value"></div><br/>
     Shedule: <div id="current_700_hwcTimer_div" class="current_value"></div><br/>
 

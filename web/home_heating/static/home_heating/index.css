@@ -10,3 +10,9 @@ body
 {
     display: inline-block;
 }
+input[type=button]
+{
+    font-size: 25pt;
+    padding: 10px 30px;
+    cursor: pointer;
+}
