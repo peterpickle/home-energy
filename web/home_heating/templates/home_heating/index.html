@@ -10,11 +10,24 @@
     <link rel="stylesheet" href="{% static 'home_heating/index.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+    function getDayOfWeek(date) {
+        return date.toLocaleString('en-us', {  weekday: 'long' });
+    }
+
+    function getFieldOutputName(fieldName) {
+        outputFieldName = fieldName;
+        if (fieldName.includes(".")) {
+            outputFieldName = fieldName.split(".", 1)[0];
+        }
+        return outputFieldName;
+    }
+
     function getEbusValue(circuit, field) {
         url = "get/" + circuit + "/" + field;
         $.getJSON(url,
             function(value) {
-                display_div = document.getElementById("current_" + circuit + "_" + field + "_div");
+                outputFieldName = getFieldOutputName(field);
+                display_div = document.getElementById("current_" + circuit + "_" + outputFieldName + "_div");
                 display_div.innerHTML = value;
             }
         );
@@ -26,10 +39,17 @@
         getEbusValue("700", "z1NightTemp");
         getEbusValue("700", "z1ActualRoomTempDesired");
         getEbusValue("700", "DisplayedOutsideTemp");
-        getEbusValue("hmu", "State");
+        getEbusValue("700", "DisplayedOutsideTemp");
+        getEbusValue("700", "z1Timer." + getDayOfWeek(new Date()));
 
         getEbusValue("700", "HwcStorageTemp");
         getEbusValue("700", "HwcTempDesired");
+        getEbusValue("700", "CylinderChargeHyst");
+        getEbusValue("700", "HwcOpMode");
+        getEbusValue("700", "hwcTimer." + getDayOfWeek(new Date()));
+
+        getEbusValue("hmu", "State");
+        getEbusValue("hmu", "currenterror");
     }
 
     getAllEbusValues();
@@ -49,10 +69,18 @@
     Night temp: <div id="current_700_z1NightTemp_div" class="current_value"></div><br/>
     Desired temp: <div id="current_700_z1ActualRoomTempDesired_div" class="current_value"></div><br/>
     Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div><br/>
-    State: <div id="current_hmu_State_div" class="current_value"></div><br/>
+    Shedule: <div id="current_700_z1Timer_div" class="current_value"></div><br/>
+    <!-- TODO: show humidity -->
 
     <h2>Water</h2>
     Current temp: <div id="current_700_HwcStorageTemp_div" class="current_value"></div><br/>
     Desired temp: <div id="current_700_HwcTempDesired_div" class="current_value"></div><br/>
+    Hyst: <div id="current_700_CylinderChargeHyst_div" class="current_value"></div><br/>
+    Mode: <div id="current_700_HwcOpMode_div" class="current_value"></div><br/>
+    Shedule: <div id="current_700_hwcTimer_div" class="current_value"></div><br/>
+
+    <h2>General</h2>
+    State: <div id="current_hmu_State_div" class="current_value"></div><br/>
+    Error: <div id="current_hmu_currenterror_div" class="current_value"></div><br/>
 </body>
 </html>
