@@ -22,33 +22,55 @@
         return outputFieldName;
     }
 
-    function getEbusValue(circuit, field) {
-        url = "get/" + circuit + "/" + field;
+    function getEbusValue(circuit, fieldName) {
+        url = "get/" + circuit + "/" + fieldName;
         $.getJSON(url,
             function(value) {
-                updateValueInUI(circuit, getFieldOutputName(field), value);
+                updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);
             }
         );
     }
 
-    function setEbusValue(circuit, field, value) {
-        url = "set/" + circuit + "/" + field+ "/" + value;
+    function setEbusValue(circuit, fieldName, value) {
+        url = "set/" + circuit + "/" + fieldName+ "/" + value;
         $.getJSON(url,
             function(response) {
                 if (response == "done") {
-                    updateValueInUI(circuit, getFieldOutputName(field), value);
+                    updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);
                 }
             }
         );
     }
 
-    function incValue(circuit, field, incValue) {
-        currentValue = parseFloat($("#current_"+ circuit + "_" + field + "_div").text());
+    function incValue(circuit, fieldName, incValue) {
+        currentValue = parseFloat($("#current_"+ circuit + "_" + fieldName + "_div").text());
         if (currentValue == "NaN") {
             return;
         }
         newValue = currentValue + incValue;
-        setEbusValue(circuit, field, newValue);
+        setEbusValue(circuit, fieldName, newValue);
+    }
+
+    function setSchedule(circuit, fieldName, allDays) {
+        oldValue = $("#current_"+ circuit + "_" + fieldName + "_div").text();
+        newValue = "";
+
+        for(i = 0; i < 6; i++) {
+            if (i != 0) {
+                newValue += ";";
+            }
+            newValue += $("#" + circuit + "_" + fieldName + "_" + i).val();
+        }
+
+        if (newValue != oldValue) {
+            //TODO: validate new value
+            n = allDays ? 7 : 1;
+            for (i = 0; i < n; i++) {
+                d = new Date();
+                d.setDate(d.getDate() + i);
+                setEbusValue(circuit, fieldName + "." +  getDayOfWeek(d), newValue);
+            }
+        }
     }
 
     function getAllEbusValues() {
@@ -70,13 +92,40 @@
         getEbusValue("hmu", "currenterror");
     }
 
-    function updateValueInUI(circuit, field, newValue) {
-        $("#current_"+ circuit + "_" + outputFieldName + "_div").text(newValue);
+    function updateValueInUI(circuit, fieldName, outputFieldName, newValue) {
+        if (fieldName.includes("Timer")) {
+            $("#current_"+ circuit + "_" + outputFieldName + "_div").text(newValue);
+            times = newValue.split(";", 6);
+            if (times.length == 6) {
+                for(i = 0; i < times.length; i++) {
+                    $("#" + circuit + "_" + outputFieldName + "_" + i).val(times[i]);
+                }
+            }
+        } else {
+            $("#current_"+ circuit + "_" + outputFieldName + "_div").text(newValue);
+        }
     }
 
-    getAllEbusValues();
+    function uiAddOptionsForTimeSelect() {
+        timeSelects = $("select");
+        timeSelects.each(
+            function(i) {
+                $(this).append('<option value="-:-">--:--</option>');
+                for(h = 0; h < 24; h++) {
+                    for(m = 0; m < 60; m+=10) {
+                        optionValue = h.toString().padStart(2, "0") + ":" + m.toString().padStart(2, "0");
+                        $(this).append('<option value="' + optionValue +'">' + optionValue + '</option>');
+                    }
+                }
+            }
+        );
+    }
 
     window.onload = function() {
+        uiAddOptionsForTimeSelect();
+
+        getAllEbusValues();
+
         $("h2").click(function() {
             getAllEbusValues();
         });
@@ -95,6 +144,10 @@
             incValue("700", "z1NightTemp", +0.5);
         });
 
+        $("#set_700_z1Timer").click(function() {
+            setSchedule("700", "z1Timer", true);
+        });
+
         $("#dec_700_HwcTempDesired").click(function() {
             incValue("700", "HwcTempDesired", -1);
         });
@@ -108,6 +161,11 @@
         $("#inc_700_CylinderChargeHyst").click(function() {
             incValue("700", "CylinderChargeHyst", +1);
         });
+
+        $("#set_700_hwcTimer").click(function() {
+            setSchedule("700", "hwcTimer", true);
+        });
+
     }
 
     </script>
@@ -127,9 +185,27 @@
     <input type="button" id="inc_700_z1NightTemp" value="+"/>
     <br/>
 
-    Desired temp: <div id="current_700_z1ActualRoomTempDesired_div" class="current_value"></div><br/>
-    Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div><br/>
-    Shedule: <div id="current_700_z1Timer_div" class="current_value"></div><br/>
+    Desired temp: <div id="current_700_z1ActualRoomTempDesired_div" class="current_value"></div>
+    <br/>
+    Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div>
+    <br/>
+
+    Schedule:
+    <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
+    <div>
+        <select id="700_z1Timer_0"></select>
+        <select id="700_z1Timer_1"></select>
+        <br/>
+        <select id="700_z1Timer_2"></select>
+        <select id="700_z1Timer_3"></select>
+        <br/>
+        <select id="700_z1Timer_4"></select>
+        <select id="700_z1Timer_5"></select>
+        <br/>
+        <input type="button" id="set_700_z1Timer" value="Set"/>
+    </div>
+    <br/>
+
     <!-- TODO: show humidity -->
 
     <h2>Water</h2>
@@ -146,11 +222,32 @@
     <input type="button" id="inc_700_CylinderChargeHyst" value="+"/>
     <br/>
 
-    Mode: <div id="current_700_HwcOpMode_div" class="current_value"></div><br/>
-    Shedule: <div id="current_700_hwcTimer_div" class="current_value"></div><br/>
+    Mode: <div id="current_700_HwcOpMode_div" class="current_value"></div>
+    <br/>
+
+    Schedule:
+    <div id="current_700_hwcTimer_div" class="current_value" style="display: none;"></div>
+    <div>
+        <select id="700_hwcTimer_0"></select>
+        <select id="700_hwcTimer_1"></select>
+        <br/>
+        <select id="700_hwcTimer_2"></select>
+        <select id="700_hwcTimer_3"></select>
+        <br/>
+        <select id="700_hwcTimer_4"></select>
+        <select id="700_hwcTimer_5"></select>
+        <br/>
+        <input type="button" id="set_700_hwcTimer" value="Set"/>
+    </div>
+    <br/>
+
+    <!-- TODO: show Legionella Day + Hour -->
 
     <h2>General</h2>
-    State: <div id="current_hmu_State_div" class="current_value"></div><br/>
-    Error: <div id="current_hmu_currenterror_div" class="current_value"></div><br/>
+    State: <div id="current_hmu_State_div" class="current_value"></div>
+    <br/>
+
+    Error: <div id="current_hmu_currenterror_div" class="current_value"></div>
+    <br/>
 </body>
 </html>

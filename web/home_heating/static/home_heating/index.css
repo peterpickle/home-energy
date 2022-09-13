@@ -16,3 +16,12 @@ input[type=button]
     padding: 10px 30px;
     cursor: pointer;
 }
+select
+{
+    -webkit-appearance: none;
+    font-size: 40pt;
+}
+option
+{
+    font-size: 40pt;
+}
