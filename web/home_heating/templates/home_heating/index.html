@@ -80,6 +80,7 @@
         getEbusValue("700", "z1ActualRoomTempDesired");
         getEbusValue("700", "DisplayedOutsideTemp");
         getEbusValue("700", "DisplayedOutsideTemp");
+        getEbusValue("700", "z1OpMode");
         getEbusValue("700", "z1Timer." + getDayOfWeek(new Date()));
 
         getEbusValue("700", "HwcStorageTemp");
@@ -190,6 +191,10 @@
     Outside Temp: <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div>
     <br/>
 
+    <!-- TODO: set mode (auto|day|night) or off? -->
+    Mode: <div id="current_700_z1OpMode_div" class="current_value"></div>
+    <br/>
+
     Schedule:
     <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
     <div>
@@ -222,6 +227,7 @@
     <input type="button" id="inc_700_CylinderChargeHyst" value="+"/>
     <br/>
 
+    <!-- TODO: set mode (auto|off)? -->
     Mode: <div id="current_700_HwcOpMode_div" class="current_value"></div>
     <br/>
 
