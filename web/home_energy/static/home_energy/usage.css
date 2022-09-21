@@ -10,6 +10,7 @@
 --peak: #dc5665
 --gas: #cc1467
 --solar-consumption: #78bc61
+--solar-forecast: #fed9b7
 */
 body
 {
@@ -80,7 +81,7 @@ body
 }
 .day_date
 {
-    font-size: 30pt;
+    font-size: 29pt;
     width: 40%;
 }
 .control_button
@@ -160,4 +161,12 @@ body
 #data_field_total_solar_cons_label_div
 {
     color: #78bc61;
+}
+#data_field_total_solar_forecast_div
+{
+    color: #fed9b7;
+}
+#data_field_total_solar_forecast_label_div
+{
+    color: #fed9b7;
 }

@@ -11,10 +11,11 @@ import time
 from django.conf import settings
 
 if not settings.configured:
-    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1)
+    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_FORECAST=1)
 
 FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 FEATURE_GAS = settings.FEATURE_GAS
+FEATURE_SOLAR_FORECAST = settings.FEATURE_SOLAR_FORECAST
 
 #The buckset size should be a number that could used to divide 15 minutes
 day_bucket_size_msec = 3 * 60 * 1000
@@ -113,8 +114,11 @@ def add_missing_data(entries, mode, value):
 }
 '''
 def generate_json_ouput(day, mode,
-                        total_day_up, total_day_down, peak_day_down, total_prod, total_gas,
-                        up_entries, down_entries, peak_down_entries, prod_entries, gas_entries):
+                        total_day_up, total_day_down, peak_day_down, total_prod, total_gas, total_solar_forecast,
+                        up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries):
+    sf_i = 0;
+    nbOfDetailedEntries = 0
+
     if mode == Mode.DAY:
         correction_factor = 1000
     elif mode == Mode.MONTH or mode == Mode.YEAR:
@@ -130,6 +134,8 @@ def generate_json_ouput(day, mode,
         result += '"total_prod": ' + str(total_prod) + ',\n'
     if FEATURE_GAS:
         result += '"total_gas": ' + str(total_gas) + ',\n'
+    if FEATURE_SOLAR_FORECAST:
+        result += '"total_solar_forecast": ' + str(total_solar_forecast) + ',\n'
 
     result += '"detailed_up_down" : [\n'
     for i, up_entry in enumerate(up_entries):
@@ -137,6 +143,7 @@ def generate_json_ouput(day, mode,
             result += ',\n'
         down_entry = down_entries[i]
         if (up_entry[0] == down_entry[0]):
+            nbOfDetailedEntries += 1
             result += '{"t":' + str(up_entry[0]) + \
                       ',"u":' + str(up_entry[1] * correction_factor) + \
                       ',"d":' + str(down_entry[1] * correction_factor) 
@@ -168,9 +175,43 @@ def generate_json_ouput(day, mode,
             else:
                 result += ',"g":null'
 
+            if FEATURE_SOLAR_FORECAST:
+                solar_forecast_entry = [item for item in solar_forecast_entries if item[0] == up_entry[0]]
+                if len(solar_forecast_entry):
+                    solar_forecast_entry = solar_forecast_entry[0]
+                    result += ',"sf":' + str(solar_forecast_entry[1] * correction_factor)
+                    sf_i += 1
+                else:
+                    result += ',"sf":null'
+            else:
+                result += ',"sf":null'
+
             result += '}'
         else:
             print('Keys don\'t match for up and down entries. i ' + str(i) + ', up_key ' + str(up_entry[0]) + ', down_key ' + str(down_entry[0]))
+
+    if FEATURE_SOLAR_FORECAST:
+        if sf_i < len(solar_forecast_entries):
+            for solar_forecast_entry in solar_forecast_entries[sf_i:]:
+
+                if nbOfDetailedEntries != 0:
+                    result += ',\n'
+
+                nbOfDetailedEntries += 1
+
+                result += '{"t":' + str(solar_forecast_entry[0]) + \
+                      ',"u":null' + \
+                      ',"d":null' + \
+                      ',"pd":null'
+                if FEATURE_PRODUCTION:
+                    result += ',"p":null'
+                if FEATURE_GAS:
+                    result += ',"g":null'
+                if len(solar_forecast_entry):
+                    result += ',"sf":' + str(solar_forecast_entry[1] * correction_factor)
+                result += '}'
+
+
     result += '\n]'
     '''
     #report the production in a seperate table
@@ -233,6 +274,7 @@ def get_detailed_usage(date_str, mode_str):
 
     prod_entries = []
     gas_entries = []
+    solar_forecast_entries = []
 
     #Get the detailed up/down data
     if mode == Mode.DAY:
@@ -249,6 +291,8 @@ def get_detailed_usage(date_str, mode_str):
         if FEATURE_GAS:
             gas_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=day_bucket_size_msec, filters=['type=gas', 'granularity=(5m,15m)'], groupby='type', reduce='min')
             gas_entries = get_entries(gas_entries, 'type', 'gas')
+        if FEATURE_SOLAR_FORECAST:
+            solar_forecast_entries = rts.range("solar_forecast_1h", start_time, end_time)
     elif mode == Mode.MONTH:
         mixed_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000, filters=['dir=(up,down)', 'granularity=1h'], groupby='dir', reduce='min')
         up_entries = get_entries(mixed_entries, 'dir', 'up')
@@ -356,6 +400,13 @@ def get_detailed_usage(date_str, mode_str):
         if len(total_gas_result):
             total_gas = total_gas_result[0][1]
 
+    #total solar forecast
+    total_solar_forecast = 0
+    if FEATURE_SOLAR_FORECAST:
+        total_solar_forecast_result = rts.range("solar_forecast_1h", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+        if len(total_solar_forecast_result):
+            total_solar_forecast = total_solar_forecast_result[0][1]
+
     #Add missing data at end
     up_entries = add_missing_data(up_entries, mode, 0.0)
     down_entries = add_missing_data(down_entries, mode, 0.0)
@@ -365,8 +416,8 @@ def get_detailed_usage(date_str, mode_str):
 
     #generate the output
     result = generate_json_ouput(day, mode,
-                                total_up, total_down, peak_down, total_prod, total_gas,
-                                up_entries, down_entries, peak_down_entries, prod_entries, gas_entries)
+                                total_up, total_down, peak_down, total_prod, total_gas, total_solar_forecast,
+                                up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
 
     return result
 
