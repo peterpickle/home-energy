@@ -1,14 +1,15 @@
 body
 {
     font-family: Arial, Tahoma, sans-serif;
-    font-size: 40pt;
+    font-size: 32pt;
     text-align: center;
     background-color: #ffffff;
     line-height: normal !important;
 }
-.current_value
+h1
 {
-    display: inline-block;
+    font-size: 40pt;
+    font-weight: bold;
 }
 input[type=button]
 {
@@ -19,9 +20,21 @@ input[type=button]
 select
 {
     -webkit-appearance: none;
-    font-size: 40pt;
+    font-size: 32pt;
 }
 option
 {
-    font-size: 40pt;
+    font-size: 32pt;
+}
+.current_value
+{
+    display: inline-block;
+}
+.mode
+{
+    width: 360px;
+}
+.mode_button
+{
+    font-size: 25pt;
 }
