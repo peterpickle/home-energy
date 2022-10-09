@@ -78,6 +78,8 @@ def get_latest():
 
     if FEATURE_PRODUCTION:
         latest_prod = rts.get("electricity_prod_1min")
+        if latest_prod is None:
+            latest_prod = (latest_up[0] - 180001, 0.0)
         latest_prod = set_value_if_data_older_than(latest_prod, 0.0, 180000)
 
     result = generate_json_ouput(convert_usage(latest_up[1]),
