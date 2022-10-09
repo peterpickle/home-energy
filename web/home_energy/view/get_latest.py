@@ -32,7 +32,7 @@ def convert_usage(value):
 def set_value_if_data_older_than(data, value, timeout_ms):
     now = int(time.time() * 1000)
     if (now - data[0]) >= timeout_ms:
-       return (data[0], value)
+        return (data[0], value)
     return data
 
 '''
@@ -57,6 +57,9 @@ def get_latest():
     #redis command: TS.GET electricity_down_sec
     latest_up = rts.get("electricity_up_sec")
     latest_down = rts.get("electricity_down_sec")
+
+    if latest_up is None or latest_down is None:
+        return generate_json_ouput(0, 0, 0, 0)
 
     latest_up = set_value_if_data_older_than(latest_up, -0.001, 10000)
     latest_down = set_value_if_data_older_than(latest_down, -0.001, 10000)

@@ -237,6 +237,8 @@ def get_epoch_end_time(start_epoch_time, days):
 def get_electricity_current_hour(rts, dir_str):
     # Get the latest value in the 1h series.
     latest_1h = rts.get("electricity_" + dir_str + "_1h")
+    if latest_1h is None:
+        return 0
     # Use this time as a start time + 1h.
     latest_hour_result = rts.range("electricity_" + dir_str + "_1min", latest_1h[0] + 3600000, latest_1h[0] + 7200000, align='start', aggregation_type='sum', bucket_size_msec=3600000)
     if len(latest_hour_result):
@@ -268,7 +270,7 @@ def get_detailed_usage(date_str, mode_str):
 
     #connect to the DB
     r = redis.Redis(host='localhost',
-                    port=6379, 
+                    port=6379,
                     password=None)
     rts = redistimeseries.client.Client(r)
 
@@ -428,3 +430,4 @@ if __name__ == '__main__':
     mode_str = get_script_arg_mode()
     result = get_detailed_usage(day_str, mode_str)
     print(result)
+
