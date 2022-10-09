@@ -79,6 +79,14 @@ TS.CREATE gas_15min LABELS type gas granularity 15m
 TS.CREATERULE gas_5min gas_15min AGGREGATION sum 900000
 ```
 
+Solar forecast
+
+Per hour, keep forever
+
+```
+TS.CREATE solar_forecast_1h DUPLICATE_POLICY LAST LABELS type solar_forecast granularity 1h
+```
+
 ## Launch the application
 
 1. start the redis-server
@@ -93,9 +101,11 @@ This will create a file dump.rdb. This is your database. If you remove it, your 
 
 2. start p1-reader
 
-3. start production reader
+3. optionally: start production reader
 
-4. start the GUI
+4. optionally: start solar forecast reader
+
+5. start the GUI
    - deploy the directory 'web' with django (See "First Deploy" section below)
 
 ## First deploy with Django and Apache
