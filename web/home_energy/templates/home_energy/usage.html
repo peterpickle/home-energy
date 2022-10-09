@@ -178,6 +178,7 @@
                 p = null;
                 c = null;
                 g = null;
+                sc = null;
                 sf = null;
 
                 chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
@@ -217,7 +218,7 @@
                         if (entry.p > entry.u) {
                             sc = entry.p - entry.u;
                         } else {
-                            sc = 0;
+                            sc = null;
                         }
                     }
                     if (FEATURE_SOLAR_FORECAST) {

@@ -45,7 +45,7 @@ def set_value_if_data_older_than(data, value, timeout_ms):
 '''
 def get_latest():
     r = redis.Redis(host='localhost',
-                    port=6379, 
+                    port=6379,
                     password=None)
     rts = redistimeseries.client.Client(r)
 
