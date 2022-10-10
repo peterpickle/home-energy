@@ -91,6 +91,7 @@
         getEbusValue("700", "hwcTimer." + getDayOfWeek(new Date()));
 
         getEbusValue("hmu", "State");
+        getEbusValue("hmu", "Status01");
         getEbusValue("hmu", "currenterror");
     }
 
@@ -131,7 +132,7 @@
 
         getAllEbusValues();
 
-        $("h2").click(function() {
+        $(".h1_title").click(function() {
             getAllEbusValues();
         });
 
@@ -199,7 +200,7 @@
     </script>
 </head>
 <body>
-    <h1>Heating</h1>
+    <h1 class="h1_title">Heating</h1>
     Room temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div>
     <br/>
 
@@ -244,7 +245,7 @@
 
     <!-- TODO: show humidity -->
 
-    <h1>Water</h1>
+    <h1 class="h1_title">Water</h1>
     Current temp: <div id="current_700_HwcStorageTemp_div" class="current_value"></div>
     <br/>
 
@@ -283,10 +284,11 @@
 
     <!-- TODO: show Legionella Day + Hour -->
 
-    <h1>General</h1>
+    <h1 class="h1_title">General</h1>
     State: <div id="current_hmu_State_div" class="current_value"></div>
     <br/>
-
+    Flow temps: <div id="current_hmu_Status01_div" class="current_value"></div>
+    <br/>
     Error: <div id="current_hmu_currenterror_div" class="current_value"></div>
     <br/>
 </body>
