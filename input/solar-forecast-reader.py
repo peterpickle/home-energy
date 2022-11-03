@@ -19,8 +19,8 @@ proxies = {
               "ftp"   : "ftp://135.245.192.7:8000"
           }
 
-faces = [ { 'latitude':LATITUDE, 'longitude':LONGITUDE, 'declination':DECLENATION, 'azimuth':-95, 'kwp':2.24, 'options':{'damping':0, 'time':'seconds'}},
-          { 'latitude':LATITUDE, 'longitude':LONGITUDE, 'declination':DECLENATION, 'azimuth':85, 'kwp':3.2,   'options':{'damping':0, 'time':'seconds'}},        
+faces = [ { 'latitude':LATITUDE, 'longitude':LONGITUDE, 'declination':DECLENATION, 'azimuth':-94, 'kwp':2.24, 'options':{'damping':0, 'time':'seconds', 'start':'now'}},
+          { 'latitude':LATITUDE, 'longitude':LONGITUDE, 'declination':DECLENATION, 'azimuth':86, 'kwp':3.2,   'options':{'damping':0, 'time':'seconds', 'start':'now'}},
         ]
 
 headers = { 'Accept': 'application/json' }
@@ -104,8 +104,9 @@ for f in faces:
         continue
 
     #sum data
-    for k in jsonResult['result']['watts'].keys():
-        v = jsonResult['result']['watts'][k]
+    for k in jsonResult['result']['watt_hours_period'].keys():
+        v = jsonResult['result']['watt_hours_period'][k]
+        print(f"{k} {v}")
 
         if v == 0:
             continue
@@ -152,4 +153,3 @@ db.connect()
 
 for k in totals.keys():
     db.save_forecast_entry(k, totals[k] / 1000)
-
