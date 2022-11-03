@@ -12,34 +12,34 @@
 
 #### Commands
 
-Elektricity
+Electricity
 
 Per second, keep 1 week.
 Per minute, keep 6 months.
 Per 15 minutes, keep forever.
 
 ```
-TS.CREATE electricity_down_sec RETENTION 604800000 DUPLICATE_POLICY SUM LABELS dir down granularity 1s
+TS.CREATE electricity_down_sec RETENTION 604800000 DUPLICATE_POLICY SUM LABELS dir down type down granularity 1s
 
-TS.CREATE electricity_down_1min RETENTION 15768000000 LABELS dir down granularity 1m
+TS.CREATE electricity_down_1min RETENTION 15768000000 LABELS dir down type down granularity 1m
 TS.CREATERULE electricity_down_sec electricity_down_1min AGGREGATION avg 60000
 
-TS.CREATE electricity_down_15min LABELS dir down granularity 15m
+TS.CREATE electricity_down_15min LABELS dir down type down granularity 15m
 TS.CREATERULE electricity_down_sec electricity_down_15min AGGREGATION avg 900000
 
-TS.CREATE electricity_down_1h LABELS dir down granularity 1h
+TS.CREATE electricity_down_1h LABELS dir down type down granularity 1h
 TS.CREATERULE electricity_down_sec electricity_down_1h AGGREGATION avg 3600000
 
 
-TS.CREATE electricity_up_sec RETENTION 604800000 DUPLICATE_POLICY SUM LABELS dir up granularity 1s
+TS.CREATE electricity_up_sec RETENTION 604800000 DUPLICATE_POLICY SUM LABELS dir up type up granularity 1s
 
-TS.CREATE electricity_up_1min RETENTION 15768000000 LABELS dir up granularity 1m
+TS.CREATE electricity_up_1min RETENTION 15768000000 LABELS dir up type up granularity 1m
 TS.CREATERULE electricity_up_sec electricity_up_1min AGGREGATION avg 60000
 
-TS.CREATE electricity_up_15min LABELS dir up granularity 15m
+TS.CREATE electricity_up_15min LABELS dir up type up granularity 15m
 TS.CREATERULE electricity_up_sec electricity_up_15min AGGREGATION avg 900000
 
-TS.CREATE electricity_up_1h LABELS dir up granularity 1h
+TS.CREATE electricity_up_1h LABELS dir up type up granularity 1h
 TS.CREATERULE electricity_up_sec electricity_up_1h AGGREGATION avg 3600000
 ```
 
@@ -85,6 +85,13 @@ Per hour, keep forever
 
 ```
 TS.CREATE solar_forecast_1h DUPLICATE_POLICY LAST LABELS type solar_forecast granularity 1h
+```
+
+Disable the expiry of 1 minute data (optional)
+```
+TS.ALTER electricity_down_1min RETENTION 0
+TS.ALTER electricity_up_1min RETENTION 0 
+TS.ALTER electricity_prod_1min RETENTION 0
 ```
 
 ## Launch the application
