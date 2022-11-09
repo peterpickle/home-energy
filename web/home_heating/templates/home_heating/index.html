@@ -92,6 +92,9 @@
 
         getEbusValue("hmu", "State");
         getEbusValue("hmu", "Status01");
+        getEbusValue("700", "Hc1FlowTemp");
+        getEbusValue("700", "Hc1ActualFlowTempDesired");
+        getEbusValue("hmu", "CurrentConsumedPower");
         getEbusValue("hmu", "currenterror");
     }
 
@@ -288,6 +291,12 @@
     State: <div id="current_hmu_State_div" class="current_value"></div>
     <br/>
     Flow temps: <div id="current_hmu_Status01_div" class="current_value"></div>
+    <br/>
+    Hc1FlowTemp: <div id="current_700_Hc1FlowTemp_div" class="current_value"></div>
+    <br/>
+    Hc1ActualFlowTempDesired: <div id="current_700_Hc1ActualFlowTempDesired_div" class="current_value"></div>
+    <br/>
+    Current Power: <div id="current_hmu_CurrentConsumedPower_div" class="current_value"></div>
     <br/>
     Error: <div id="current_hmu_currenterror_div" class="current_value"></div>
     <br/>
