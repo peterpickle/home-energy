@@ -165,7 +165,7 @@ class SerialReader(Reader):
         self.port.xonxoff = 0
         self.port.rtscts = 0
         self.port.timeout = 5
-        self.port.port = "/dev/ttyUSB0"
+        self.port.port = "/dev/ttyUSB_P1"
 
     def open(self):
         try:
