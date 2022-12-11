@@ -29,7 +29,7 @@ NB_OF_TELEGRAM_LINES = 21
 
 # create logger
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # create console handler and set level to debug
 consoleHandler = logging.StreamHandler()
