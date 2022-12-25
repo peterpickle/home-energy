@@ -47,12 +47,14 @@ FEATURE_PRODUCTION        = settings.getint('FEATURE_FLAGS', 'PRODUCTION', fallb
 FEATURE_SOLAR_CONSUMPTION = settings.getint('FEATURE_FLAGS', 'SOLAR_CONSUMPTION', fallback=1)
 FEATURE_SOLAR_FORECAST    = settings.getint('FEATURE_FLAGS', 'SOLAR_FORECAST', fallback=1)
 FEATURE_HEATING_APP       = settings.getint('FEATURE_FLAGS', 'HEATING_APP', fallback=1)
+FEATURE_VENT_APP          = settings.getint('FEATURE_FLAGS', 'VENT_APP', fallback=1)
 
 # Application definition
 
 INSTALLED_APPS = [
     'home_energy.apps.HomeEnergyConfig',
     'home_heating.apps.HomeHeatingConfig',
+    'home_vent.apps.HomeVentConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

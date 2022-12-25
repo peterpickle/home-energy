@@ -19,6 +19,7 @@ from django.urls import include, path
 
 if not settings.configured:
     settings.configure(FEATURE_HEATING_APP=1)
+    settings.configure(FEATURE_VENT_APP=1)
 
 urlpatterns = [
     path('home-energy/', include('home_energy.urls')),
@@ -28,3 +29,6 @@ urlpatterns = [
 
 if settings.FEATURE_HEATING_APP:
     urlpatterns.append(path('home-heating/', include('home_heating.urls')))
+
+if settings.FEATURE_VENT_APP:
+    urlpatterns.append(path('home-vent/', include('home_vent.urls')))
