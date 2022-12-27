@@ -46,13 +46,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable production-reader.service
 sudo systemctl start production-reader.service
 
-
 #TODO: check feature flag ventilation
 
 #install service vent-reader
 set_absolute_path_in_file vent-reader/vent-reader.py vent-reader/vent-reader.service
 sudo cp vent-reader/vent-reader.service /lib/systemd/system/
-sudo chmod 644 /lib/sylessstemd/system/vent-reader.service
+sudo chmod 644 /lib/systemd/system/vent-reader.service
 sudo systemctl daemon-reload
 sudo systemctl enable vent-reader.service
 sudo systemctl start vent-reader.service
