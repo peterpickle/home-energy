@@ -32,11 +32,41 @@
         );
     }
 
+    function doAction(action) {
+        url = "action/" + action;
+        $.getJSON(url,
+            function(response) {
+                /*if (response == "ok") {
+                }*/
+            }
+        );
+    }
+
     window.onload = function() {
         getAllValues();
 
         $("img").click(function() {
             getAllValues();
+        });
+
+        $("#set_away_btn").click(function() {
+            doAction("manual");
+            setTimeout('doAction("ventilation_level_0")', 1000)
+        });
+        $("#set_manual_btn").click(function() {
+            doAction("manual");
+        });
+        $("#set_auto_btn").click(function() {
+            doAction("auto");
+        });
+        $("#set_ventilation_level_1_btn").click(function() {
+            doAction("ventilation_level_1");
+        });
+        $("#set_ventilation_level_2_btn").click(function() {
+            doAction("ventilation_level_3");
+        });
+        $("#set_ventilation_level_3_btn").click(function() {
+            doAction("ventilation_level_3");
         });
     }
 
@@ -53,8 +83,6 @@
     </script>
 </head>
 <body>
-    
-    
     <div id="image_container_div">
         <img src="{% static 'home_vent/vent_exchange.png' %}">
 
@@ -80,7 +108,20 @@
         <div id="comfoair_air_supply_humidity_div"></div>
         <div id="comfoair_air_extract_temperature_div"></div>
         <div id="comfoair_air_extract_humidity_div"></div>
-    </div>   
-    
+    </div>
+
+    <br/>
+    <div class="bottom_button_container">
+        <div id="set_operating_mode_div" class="mode btn-group" role="group">
+            <button type="button" id="set_away_btn" class="btn btn-secondary mode_button">Away</button>
+            <button type="button" id="set_auto_btn" class="btn btn-secondary mode_button">Auto</button>
+            <button type="button" id="set_manual_btn" class="btn btn-secondary mode_button">Manual</button>
+        </div>
+        <div id="set_speed_div" class="mode btn-group" role="group">
+            <button type="button" id="set_ventilation_level_1_btn" class="btn btn-secondary mode_button">1</button>
+            <button type="button" id="set_ventilation_level_2_btn" class="btn btn-secondary mode_button">2</button>
+            <button type="button" id="set_ventilation_level_3_btn" class="btn btn-secondary mode_button">3</button>
+        </div>
+    </div>
 </body>
 </html>

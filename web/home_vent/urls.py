@@ -16,4 +16,7 @@ urlpatterns = [
     # ex: /home-vent/getAll/
     path('getAll', views.getAll, name='getAll'),
     path('getAll/', views.getAll, name='getAll'),
+
+    # ex: /home-vent/action/<action>
+    path('action/<str:action>', views.action, name='action')
 ]
