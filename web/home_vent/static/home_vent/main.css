@@ -8,33 +8,116 @@ body
 }
 h1
 {
-    font-size: 40pt;
+    font-size: 20pt;
     font-weight: bold;
 }
-input[type=button]
+img
 {
-    font-size: 25pt;
-    padding: 10px 30px;
-    cursor: pointer;
+    width: auto;
+    height: 90vh;
 }
-select
+#image_container_div
 {
-    -webkit-appearance: none;
-    font-size: 32pt;
-}
-option
-{
-    font-size: 32pt;
-}
-.current_value
-{
+    position: relative;
     display: inline-block;
 }
-.mode
+
+/* TOP */
+#comfoair_air_exhaust_temperature_div
 {
-    width: 360px;
+    position: absolute;
+    top: 3%;
+    left: 13%;
 }
-.mode_button
+#comfoair_air_exhaust_humidity_div
 {
-    font-size: 25pt;
+    position: absolute;
+    top: 7%;
+    left: 13%;
 }
+#comfoair_air_outdoor_temperature_div
+{
+    position: absolute;
+    top: 3%;
+    right: 13%;
+}
+#comfoair_air_outdoor_humidity_div
+{
+    position: absolute;
+    top: 7%;
+    right: 13%;
+}
+
+#comfoair_fan_exhaust_flow_div
+{
+    position: absolute;
+    top: 20%;
+    left: 0%;
+}
+#comfoair_fan_exhaust_duty_div
+{
+    position: absolute;
+    top: 24%;
+    left: 0%;
+}
+
+
+/* MIDDLE */
+#comfoair_ventilation_level_div
+{
+    position: absolute;
+    top: 45%;
+    left: 92%;
+}
+#comfoair_power_consumption_ventilation_div
+{
+    position: absolute;
+    top: 49%;
+    left: 92%;
+}
+#comfoair_rmot_div
+{
+    position: absolute;
+    top: 53%;
+    left: 92%;
+}
+
+/* BOTTOM */
+#comfoair_fan_supply_duty_div
+{
+    position: absolute;
+    bottom: 24%;
+    left: 0%;
+}
+#comfoair_fan_supply_flow_div
+{
+    position: absolute;
+    bottom: 20%;
+    left: 0%;
+}
+
+#comfoair_air_supply_temperature_div
+{
+    position: absolute;
+    top: 90%;
+    left: 13%;
+}
+#comfoair_air_supply_humidity_div
+{
+    position: absolute;
+    top: 94%;
+    left: 13%;
+}
+#comfoair_air_extract_temperature_div
+{
+    position: absolute;
+    top: 90%;
+    right: 13%;
+}
+#comfoair_air_extract_humidity_div
+{
+    position: absolute;
+    top: 94%;
+    right: 13%;
+}
+

@@ -15,7 +15,7 @@
         url = "get/" + fieldName;
         $.getJSON(url,
             function(value) {
-                <!--updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);-->
+                updateValueInUI(key, result[key]);
             }
         );
     }
@@ -23,9 +23,11 @@
     function getAllValues() {
         url = "getAll";
         $.getJSON(url,
-            function(value) {
-                <!--updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);-->
-                $("#all_values_div").text(JSON.stringify(value));
+            function(result) {
+                for(key in result) {
+                    updateValueInUI(key, result[key]);
+                }
+                setTimeout("getAllValues()", 2000);
             }
         );
     }
@@ -33,18 +35,52 @@
     window.onload = function() {
         getAllValues();
 
-        $(".h1_title").click(function() {
+        $("img").click(function() {
             getAllValues();
         });
+    }
+
+    function updateValueInUI(fieldName, value) {
+        if (fieldName.includes("humidity") ||
+            fieldName.includes("duty") ||
+            fieldName.includes("flow") ||
+            fieldName.includes("power_consumption")) {
+            value = parseFloat(value)
+        }
+        $("#"+ fieldName.replace('.','_') + "_div").text(value);
     }
 
     </script>
 </head>
 <body>
-    <h1 class="h1_title">Ventilation</h1>
-    <!--Outside temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div>-->
-    <div id="all_values_div"></div>
-    <br/>
+    
+    
+    <div id="image_container_div">
+        <img src="{% static 'home_vent/vent_exchange.png' %}">
+
+        <!-- TOP -->
+        <div id="comfoair_air_exhaust_temperature_div"></div>
+        <div id="comfoair_air_exhaust_humidity_div"></div>
+        <div id="comfoair_air_outdoor_temperature_div"></div>
+        <div id="comfoair_air_outdoor_humidity_div"></div>
+
+        <div id="comfoair_fan_exhaust_flow_div"></div>
+        <div id="comfoair_fan_exhaust_duty_div"></div>
+        
+        <!-- MIDDLE -->
+        <div id="comfoair_power_consumption_ventilation_div"></div>
+        <div id="comfoair_ventilation_level_div"></div>
+        <div id="comfoair_rmot_div"></div>
+
+        <!-- BOTTOM -->
+        <div id="comfoair_fan_supply_duty_div"></div>
+        <div id="comfoair_fan_supply_flow_div"></div>
+        
+        <div id="comfoair_air_supply_temperature_div"></div>
+        <div id="comfoair_air_supply_humidity_div"></div>
+        <div id="comfoair_air_extract_temperature_div"></div>
+        <div id="comfoair_air_extract_humidity_div"></div>
+    </div>   
     
 </body>
 </html>
