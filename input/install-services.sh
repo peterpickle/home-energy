@@ -46,10 +46,24 @@ sudo systemctl daemon-reload
 sudo systemctl enable production-reader.service
 sudo systemctl start production-reader.service
 
+
+#TODO: check feature flag ventilation
+
+#install service vent-reader
+set_absolute_path_in_file vent-reader/vent-reader.py vent-reader/vent-reader.service
+sudo cp vent-reader/vent-reader.service /lib/systemd/system/
+sudo chmod 644 /lib/sylessstemd/system/vent-reader.service
+sudo systemctl daemon-reload
+sudo systemctl enable vent-reader.service
+sudo systemctl start vent-reader.service
+
+
 #check service
 #sudo systemctl status p1-reader.service
 #sudo systemctl status production-reader.service
+#sudo systemctl status vent-reader.service
 
 #follow service logs
 #sudo journalctl -f -u p1-reader.service
 #sudo journalctl -f -u production-reader.service
+#sudo journalctl -f -u vent-reader.service

@@ -1,0 +1,11 @@
+[Unit]
+Description=Vent reader service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python vent-reader/vent-reader.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
