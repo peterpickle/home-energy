@@ -6,15 +6,10 @@ body
     background-color: #ffffff;
     line-height: normal !important;
 }
-h1
-{
-    font-size: 20pt;
-    font-weight: bold;
-}
 img
 {
     width: auto;
-    height: 90vh;
+    height: 100vh;
 }
 #image_container_div
 {
@@ -32,14 +27,18 @@ input[type=button]
     /*width: 100%;
     height: 10%;*/
 }
-.mode
-{
-    /*width: 50%;*/
-}
 .mode_button
 {
-    /*height: 100px;*/
-    font-size: 35pt;
+    display: inline-block;
+    font-size: 32pt;
+    height: 10vh;
+    line-height: 10vh;
+    min-width: 80px;
+    width: 15%;    
+    margin: 3px 0px 15px 0px;
+    padding: 0px 10px 0px 10px;
+    border-style: solid;
+    border-width: 1px;
 }
 
 /* TOP */
