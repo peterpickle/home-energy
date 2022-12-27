@@ -11,26 +11,39 @@
     <link rel="stylesheet" href="{% static 'home_vent/main.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
-    
+    function getValue(fieldName) {
+        url = "get/" + fieldName;
+        $.getJSON(url,
+            function(value) {
+                <!--updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);-->
+            }
+        );
+    }
+
+    function getAllValues() {
+        url = "getAll";
+        $.getJSON(url,
+            function(value) {
+                <!--updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);-->
+                $("#all_values_div").text(JSON.stringify(value));
+            }
+        );
+    }
 
     window.onload = function() {
-        /*
-        uiAddOptionsForTimeSelect();
-
-        getAllEbusValues();
+        getAllValues();
 
         $(".h1_title").click(function() {
-            getAllEbusValues();
+            getAllValues();
         });
-
-        */
     }
 
     </script>
 </head>
 <body>
     <h1 class="h1_title">Ventilation</h1>
-    Outside temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div>
+    <!--Outside temp: <div id="current_700_z1RoomTemp_div" class="current_value"></div>-->
+    <div id="all_values_div"></div>
     <br/>
     
 </body>
