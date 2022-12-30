@@ -53,20 +53,36 @@
             doAction("manual");
             setTimeout('doAction("ventilation_level_0")', 1000)
         });
-        $("#set_manual_btn").click(function() {
-            doAction("manual");
-        });
         $("#set_auto_btn").click(function() {
             doAction("auto");
         });
         $("#set_ventilation_level_1_btn").click(function() {
-            doAction("ventilation_level_1");
+            doAction("manual");
+            setTimeout('doAction("ventilation_level_1")', 1000)
         });
         $("#set_ventilation_level_2_btn").click(function() {
-            doAction("ventilation_level_3");
+            doAction("manual");
+            setTimeout('doAction("ventilation_level_2")', 1000)
         });
         $("#set_ventilation_level_3_btn").click(function() {
-            doAction("ventilation_level_3");
+            doAction("manual");
+            setTimeout('doAction("ventilation_level_3")', 1000)
+        });
+
+        $("#set_boost_end_btn").click(function() {
+            doAction("boost_end");
+        });
+        $("#set_boost_10_min_btn").click(function() {
+            doAction("boost_10_min");
+        });
+        $("#set_boost_20_min_btn").click(function() {
+            doAction("boost_20_min");
+        });
+        $("#set_boost_30_min_btn").click(function() {
+            doAction("boost_30_min");
+        });
+        $("#set_boost_60_min_btn").click(function() {
+            doAction("boost_60_min");
         });
     }
 
@@ -77,6 +93,22 @@
             fieldName.includes("power_consumption")) {
             value = parseFloat(value)
         }
+        if (fieldName.includes("temperature")) {
+            value += " °C";
+        } else if (fieldName.includes("humidity")) {
+            value += " %";
+        } else if (fieldName.includes("flow")) {
+            value += " m³";
+        } else if (fieldName.includes("duty")) {
+            value += " %";
+        } else if (fieldName.includes("power_consumption")) {
+            value += " W";
+        } else if (fieldName.includes("days_until_next_filter_change")) {
+            value += " days";
+        } else if (fieldName.includes("rmot")) {
+            value = "RM  " + value + " °C";
+        }
+
         $("#"+ fieldName.replace('.','_') + "_div").text(value);
     }
 
@@ -92,13 +124,19 @@
         <div id="comfoair_air_outdoor_temperature_div"></div>
         <div id="comfoair_air_outdoor_humidity_div"></div>
 
+        <div id="comfoair_rmot_div"></div>
+
         <div id="comfoair_fan_exhaust_flow_div"></div>
         <div id="comfoair_fan_exhaust_duty_div"></div>
         
         <!-- MIDDLE -->
-        <div id="comfoair_power_consumption_ventilation_div"></div>
+        <div id="comfoair_operating_mode_div"></div>
+        <div id="comfoair_operating_mode2_div"></div>
         <div id="comfoair_ventilation_level_div"></div>
-        <div id="comfoair_rmot_div"></div>
+
+        <div id="comfoair_power_consumption_ventilation_div"></div>
+
+        <div id="comfoair_days_until_next_filter_change_div"></div>
 
         <!-- BOTTOM -->
         <div id="comfoair_fan_supply_duty_div"></div>
@@ -114,10 +152,18 @@
     <div class="bottom_button_container">
         <div id="set_away_btn" class="mode_button">Away</div>
         <div id="set_auto_btn" class="mode_button">Auto</div>
-        <div id="set_manual_btn" class="mode_button">Man</div>
-        <div id="set_ventilation_level_1_btn" class="mode_button">1</div>
-        <div id="set_ventilation_level_2_btn" class="mode_button">2</div>
-        <div id="set_ventilation_level_3_btn" class="mode_button">3</div>
+        <div id="set_ventilation_level_1_btn" class="mode_button">M 1</div>
+        <div id="set_ventilation_level_2_btn" class="mode_button">M 2</div>
+        <div id="set_ventilation_level_3_btn" class="mode_button">M 3</div>
     </div>
+    <!--
+    <div class="boost_button_container">
+        <div id="set_boost_end_btn"    class="mode_button">Boost Off</div>
+        <div id="set_boost_10_min_btn" class="mode_button">B 10m</div>
+        <div id="set_boost_20_min_btn" class="mode_button">B 20m</div>
+        <div id="set_boost_30_min_btn" class="mode_button">B 30m</div>
+        <div id="set_boost_60_min_btn" class="mode_button">B 60m</div>
+    </div>
+    -->
 </body>
 </html>

@@ -28,18 +28,22 @@ def transform_away(value: list) -> bool:
 def transform_operating_mode(value: list) -> str:
     val = transform_any(value)
     if val == 255:
-        return 'auto'
+        return 'Auto'
     if val == 1:
-        return 'limited_manual'
+        return 'Lim. Manual'
     if val == 5:
-        return 'unlimited_manual'
-    return None
+        return 'Manual'
+    if val == 6:
+        return 'Boost'
+    return val
 
 def transform_operating_mode2(value: list) -> str:
     val = transform_any(value)
+    if val == 255:
+        return 'Auto'
     if val == 1:
-        return 'unlimited_manual'
-    return 'auto'
+        return 'Manual'
+    return val
 
 
 # 8415 0601 00000000 100e0000 01	Set ventilation mode: supply only for 1 hour
