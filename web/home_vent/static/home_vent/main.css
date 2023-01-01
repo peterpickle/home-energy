@@ -71,7 +71,7 @@ input[type=button]
 {
     position: absolute;
     top: 3%;
-    left: 39%;
+    left: 37%;
 }
 
 #comfoair_fan_exhaust_flow_div
@@ -106,12 +106,37 @@ input[type=button]
     top: 51%;
     left: 0%;
 }
+#comfoair_timer_1_div
+{
+    position: absolute;
+    top: 54%;
+    left: 0%;
+}
 
 #comfoair_power_consumption_ventilation_div
 {
     position: absolute;
+    top: 48%;
+    left: 23%;
+}
+
+#bypass_label_div
+{
+    position: absolute;
     top: 45%;
-    left: 88%;
+    left: 64%;
+}
+#comfoair_bypass_state_div
+{
+    position: absolute;
+    top: 48%;
+    left: 64%;
+}
+#comfoair_bypass_open_percentage_div
+{
+    position: absolute;
+    top: 51%;
+    left: 64%;
 }
 
 #comfoair_days_until_next_filter_change_div

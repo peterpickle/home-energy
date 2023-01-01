@@ -86,11 +86,35 @@
         });
     }
 
+    function formatSeconds(duration)
+    {
+        if (duration == 4294967295)
+        {
+            return ""
+        }
+
+        // Hours, minutes and seconds
+        var hrs = Math.floor(duration / 3600);
+        var mins = Math.ceil((duration % 3600) / 60);
+        //var secs = ~~duration % 60;
+
+        var r = "";
+
+        if (hrs > 0) {
+            r += "" + hrs + " h";
+        }
+
+        r += " " + mins + " m"
+        return r;
+    }
+
     function updateValueInUI(fieldName, value) {
         if (fieldName.includes("humidity") ||
             fieldName.includes("duty") ||
             fieldName.includes("flow") ||
-            fieldName.includes("power_consumption")) {
+            fieldName.includes("power_consumption") ||
+            fieldName.includes("percentage") ||
+            fieldName.includes("timer")) {
             value = parseFloat(value)
         }
         if (fieldName.includes("temperature")) {
@@ -101,12 +125,22 @@
             value += " m³";
         } else if (fieldName.includes("duty")) {
             value += " %";
-        } else if (fieldName.includes("power_consumption")) {
+        } else if (fieldName.includes("percentage")) {
+            value += " %";
+        }else if (fieldName.includes("power_consumption")) {
             value += " W";
         } else if (fieldName.includes("days_until_next_filter_change")) {
             value += " days";
         } else if (fieldName.includes("rmot")) {
             value = "RM  " + value + " °C";
+        } else if (fieldName.includes("bypass_state")) {
+            //value = "bypass " + value;
+        } else if (fieldName.includes("timer")) {
+            if ($("#comfoair_operating_mode_div").text() == "Boost") {
+                value = formatSeconds(value);
+            } else {
+                value = ""
+            }
         }
 
         $("#"+ fieldName.replace('.','_') + "_div").text(value);
@@ -133,6 +167,11 @@
         <div id="comfoair_operating_mode_div"></div>
         <div id="comfoair_operating_mode2_div"></div>
         <div id="comfoair_ventilation_level_div"></div>
+        <div id="comfoair_timer_1_div"></div>
+
+        <div id="bypass_label_div">Bypass</div>
+        <div id="comfoair_bypass_state_div"></div>
+        <div id="comfoair_bypass_open_percentage_div"></div>
 
         <div id="comfoair_power_consumption_ventilation_div"></div>
 
@@ -156,14 +195,12 @@
         <div id="set_ventilation_level_2_btn" class="mode_button">M 2</div>
         <div id="set_ventilation_level_3_btn" class="mode_button">M 3</div>
     </div>
-    <!--
     <div class="boost_button_container">
-        <div id="set_boost_end_btn"    class="mode_button">Boost Off</div>
+        <div id="set_boost_end_btn"    class="mode_button">B Off</div>
         <div id="set_boost_10_min_btn" class="mode_button">B 10m</div>
         <div id="set_boost_20_min_btn" class="mode_button">B 20m</div>
         <div id="set_boost_30_min_btn" class="mode_button">B 30m</div>
         <div id="set_boost_60_min_btn" class="mode_button">B 60m</div>
     </div>
-    -->
 </body>
 </html>
