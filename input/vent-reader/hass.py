@@ -2,7 +2,7 @@ import mapping
 import logging
 import json
 
-logger = logging.getLogger('comfoair-hass')
+logger = None
 
 def get_friendly_name(name):
   parts = name.split('_')
@@ -10,7 +10,8 @@ def get_friendly_name(name):
     parts[i] = parts[i].capitalize()
   return ' '.join(parts)
 
-def publish_hass_mqtt_discovery(mqtt_client):
+def publish_hass_mqtt_discovery(mqtt_client, log):
+  logger = log
   logger.info("hass mqtt")
   try:
     for key in mapping.data:

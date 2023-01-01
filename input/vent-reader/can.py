@@ -4,9 +4,6 @@ import logging
 import sys
 import threading
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logger = logging.getLogger('comfoair-can')
-
 class CN1FAddr:
   def __init__(self, SrcAddr, DstAddr, Address, MultiMsg, A8000, A10000, SeqNr):
     self.SrcAddr = SrcAddr
@@ -52,7 +49,8 @@ class CANInterface:
     self.baudrate = baudrate
     self.write_lock = threading.Lock()
   
-  def open(self):
+  def open(self, logger):
+    self.logger = logger
     self.sp = serial.Serial(self.device, self.baudrate)  
     self._send_magic_init_packet()
 
@@ -66,10 +64,12 @@ class CANInterface:
           if next_byte == self.START_BYTE_2:
               id = frame[1:5]
               data =frame[5:]
-              id_hex = str() + format(int.from_bytes(id, byteorder='little'), '#10X')
-              pdid = (int(id_hex, 16)>>14)&0x7ff
+              id_hex = int.from_bytes(id, byteorder='big')
+              id_hex_str = str() + format(int.from_bytes(id, byteorder='little'), '#10X')
+              #self.logger.debug(f'{id} {hex(id_hex)} {id_hex_str}')
+              pdid = (int(id_hex_str, 16)>>14)&0x7ff
               frame = bytearray()
-              callback(pdid, data)
+              callback(pdid, id_hex, data)
           else:
               frame.append(new_byte)
               frame.append(next_byte)
@@ -153,6 +153,6 @@ class CANInterface:
 
     send_buf.append(checksum)
     self.sp.write(send_buf)
-    logger.info('init config done')
+    self.logger.info('Init CAN done')
 
   

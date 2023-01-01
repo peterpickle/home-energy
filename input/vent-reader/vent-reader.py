@@ -2,6 +2,7 @@
 #https://github.com/gytisgreitai
 #https://github.com/gytisgreitai/zehnder-can-mqtt
 
+import binascii
 import logging
 import os
 import paho.mqtt.client as mqtt
@@ -21,7 +22,7 @@ errorLogFile = os.path.join(dirname, 'vent_error_log.txt')
 #logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # create logger
-logger = logging.getLogger()
+logger = logging.getLogger('vent-reader')
 logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
@@ -33,7 +34,7 @@ fileHandler = logging.FileHandler(errorLogFile)
 fileHandler.setLevel(logging.ERROR)
 
 # create formatter
-formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s:%(message)s')
 
 # add formatter log handlers
 consoleHandler.setFormatter(formatter)
@@ -54,7 +55,7 @@ def on_mqtt_connect(client, userdata, flags, rc):
   logger.info('subscribing to comfoair/action')
   client.subscribe('comfoair/action')
   client.publish('comfoair/status', 'online', 0, True)
-  publish_hass_mqtt_discovery(client)
+  publish_hass_mqtt_discovery(client, logger)
 
 def on_mqtt_message(client, userdata, msg):
   action =str(msg.payload.decode('utf-8'))
@@ -71,21 +72,18 @@ def on_mqtt_message(client, userdata, msg):
   else:
     logger.error('action not found %s', action)
 
-def process_can_message(pdid, data):
-  if pdid in mapping.data:
-    pdid_config = mapping.data[pdid]
-    value =  pdid_config.get('transformation')(data)
-    if pdid_config.get('ok') and value is not None:
-      #logger.info('got message for pid %s raw: %s transformed: %s', pdid, data, value)
-      name = pdid_config.get('name')
+def process_can_message(pdid, id_hex, data):
+  if id_hex in mapping.data:
+    config = mapping.data[id_hex]
+    value =  config.get('transformation')(data)
+    name = config.get('name')
+    if config.get('ok') and value is not None:
       r.set('comfoair.' + name, value)
       mqtt_client.publish('comfoair/status/' + name, value, 0, True)
     else:
-      logger.info('Unknown id. not pushing. %s %s', pdid, value)
-  elif pdid != 0:
-    logger.info('pid not found %s %s', pdid, data)
-
-logger = logging.getLogger('comfoair-main')
+      logger.info(f'No parsing details. id:{pdid} id_hex:{hex(id_hex)} name:{name} decoded:{value} raw:{binascii.hexlify(bytearray(data))}')
+  elif id_hex != 0x01000010:
+      logger.info(f'Id not found. id:{pdid} id_hex:{hex(id_hex)} raw:{binascii.hexlify(bytearray(data))}')
 
 
 logger.info('starting up')
@@ -96,5 +94,5 @@ mqtt_client.on_message = on_mqtt_message
 mqtt_client.loop_start()
 
 can = CANInterface('/dev/ttyUSB_CAN_VENT', 2000000)
-can.open()
+can.open(logger)
 can.read(process_can_message)
