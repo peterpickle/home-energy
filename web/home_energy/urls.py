@@ -19,6 +19,9 @@ urlpatterns = [
     path('details', views.details, name='details'),
     path('details/', views.details, name='details'),
 
+    # ex: /home-energy/prices.html
+    path('prices.html', views.prices, name='prices'),
+
     # ex: /home-energy/debug/p1-reader.html
     path('debug/p1-reader.html', views.debug_p1_reader, name='debug_p1_reader'),
 ]

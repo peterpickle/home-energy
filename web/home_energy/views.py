@@ -22,6 +22,10 @@ def details(request):
     return HttpResponse(get_detailed_usage.get_detailed_usage(date, mode), content_type="application/json")
 
 @login_required
+def prices(request):
+    return render(request, 'home_energy/prices.html')
+
+@login_required
 def debug_p1_reader(request):
     context = {'debug_entries': p1_reader_debug.get_debug_entries()}
     return render(request, 'home_energy/debug/p1-reader.html', context)
