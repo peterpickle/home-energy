@@ -12,6 +12,38 @@
     <link rel="stylesheet" href="{% static 'home_energy/usage.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+    function getAllPrices() {
+        url = "getAllPrices";
+        $.getJSON(url,
+            function(result) {
+                $("#prices_div").html("");
+                for(i in result) {
+                    addPriceDiv(result[i]);
+                }
+            }
+        );
+    }
+
+    window.onload = function() {
+        getAllPrices();
+
+        /*$("#set_boost_60_min_btn").click(function() {
+            doAction("boost_60_min");
+        });*/
+    }
+
+    function formatEpochInSec(epoch) {
+        date = new Date(epoch * 1000);
+        return date.toLocaleDateString()
+    }
+
+    function addPriceDiv(price) {
+        html = "<div>";
+        html += price.id + " " + formatEpochInSec(price.starttime) + " " + price.down + " " + price.up + " " + price.peak
+        html += "</div>";
+        $("#prices_div").append(html)
+    }
+
     </script>
 </head>
 <body>

@@ -2,8 +2,6 @@
 
 from home_energy.view.energy_common import *
 
-#get price id
-
 #HMSET price:1 id 1 starttime 0  down 0.1 up 0.01 peak 40
 #ZADD price.starttime.index 0 price:1
 def add_price(starttime, down , up, peak):

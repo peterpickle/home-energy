@@ -6,6 +6,9 @@ from django.shortcuts import render
 from home_energy.view import get_latest
 from home_energy.view import get_detailed_usage
 from home_energy.view import p1_reader_debug
+from home_energy.view import prices as pr
+
+import json
 
 @login_required
 def usage(request):
@@ -24,6 +27,10 @@ def details(request):
 @login_required
 def prices(request):
     return render(request, 'home_energy/prices.html')
+
+@login_required
+def get_all_prices(request):
+    return HttpResponse(json.dumps(pr.get_all_prices_reversed()), content_type="application/json")
 
 @login_required
 def debug_p1_reader(request):
