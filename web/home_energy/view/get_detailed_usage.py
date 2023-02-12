@@ -7,7 +7,7 @@ import redis
 import sys
 
 from django.conf import settings
-from energy_common import *
+from home_energy.view.energy_common import *
 
 if not settings.configured:
     settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_FORECAST=1)

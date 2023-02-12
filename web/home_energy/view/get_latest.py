@@ -4,7 +4,7 @@ import redis
 import time
 
 from django.conf import settings
-from energy_common import *
+from home_energy.view.energy_common import *
 
 if not settings.configured:
     settings.configure(FEATURE_PRODUCTION=1)

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from energy_common import *
+from home_energy.view.energy_common import *
 
 #get price id
 
