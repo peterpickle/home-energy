@@ -7,7 +7,6 @@ import redis
 r = redis.Redis(host='localhost',
                 port=6379,
                 password=None)
-#rts = redistimeseries.client.Client(r)
 
 def get(field):
     value = r.get(field)

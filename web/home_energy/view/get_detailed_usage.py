@@ -4,11 +4,10 @@ import datetime
 import calendar
 from enum import Enum
 import redis
-import redistimeseries.client
 import sys
-import time
 
 from django.conf import settings
+from energy_common import *
 
 if not settings.configured:
     settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_FORECAST=1)
@@ -27,9 +26,6 @@ class Mode(Enum):
     DAY = 1
     MONTH = 2
     YEAR = 3
-
-def parse_day(day_str):
-    return datetime.datetime.strptime(day_str, '%Y-%m-%d')
 
 def get_default_day():
     return datetime.date.today()
@@ -228,12 +224,6 @@ def generate_json_ouput(day, mode,
     result += '\n}'
     return result
 
-def get_epoch_time_ms(date):
-    return int(date.strftime("%s")) * 1000
-
-def get_epoch_end_time(start_epoch_time, days):
-    return start_epoch_time + (days * 86400000) - 1
-
 def get_electricity_current_hour(rts, dir_str):
     # Get the latest value in the 1h series.
     latest_1h = rts.get("electricity_" + dir_str + "_1h")
@@ -263,16 +253,13 @@ def get_detailed_usage(date_str, mode_str):
     else:
         raise ValueError("Invalid mode")
 
-    now = int(time.time() * 1000)
+    now = get_now_epoch_in_ms()
     start_time = get_epoch_time_ms(start_day)
     end_time = get_epoch_end_time(start_time, days)
     total_bucket_size = days * 86400000
 
-    #connect to the DB
-    r = redis.Redis(host='localhost',
-                    port=6379,
-                    password=None)
-    rts = redistimeseries.client.Client(r)
+    r = db_connect()
+    rts = db_timeseries_connect(r)
 
     prod_entries = []
     gas_entries = []

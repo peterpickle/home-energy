@@ -8,7 +8,6 @@ import logging
 import os
 import re
 import redis
-import redistimeseries.client
 import socket
 import sys
 import time
@@ -105,7 +104,7 @@ class Database:
         self.r = redis.Redis(host='localhost',
                              port=6379, 
                              password=None)
-        self.rts = redistimeseries.client.Client(self.r)
+        self.rts = self.r.ts()
 
     def disconnect(self):
         #Nothing to do for redis

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import redis
-import redistimeseries.client
 import time
 
 from django.conf import settings
+from energy_common import *
 
 if not settings.configured:
     settings.configure(FEATURE_PRODUCTION=1)
@@ -44,10 +44,8 @@ def set_value_if_data_older_than(data, value, timeout_ms):
 }
 '''
 def get_latest():
-    r = redis.Redis(host='localhost',
-                    port=6379,
-                    password=None)
-    rts = redistimeseries.client.Client(r)
+    r = db_connect()
+    rts = db_timeseries_connect(r)
 
     #redis command: xrevrange elektricity + - COUNT 1 
     #latest_stream_entry = r.xrevrange("electricity", max=u'+', min=u'-', count=1)

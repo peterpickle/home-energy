@@ -7,7 +7,6 @@ import logging
 import os
 import paho.mqtt.client as mqtt
 import redis
-#import redistimeseries.client
 import sys
 
 import mapping
@@ -48,7 +47,6 @@ logger.addHandler(fileHandler)
 r = redis.Redis(host='localhost',
                      port=6379, 
                      password=None)
-#rts = redistimeseries.client.Client(r)
 
 
 def on_mqtt_connect(client, userdata, flags, rc):
