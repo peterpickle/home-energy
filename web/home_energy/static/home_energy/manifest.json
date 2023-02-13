@@ -1,0 +1,16 @@
+{
+  "name": "Home-Energy",
+  "short_name": "Home-Energy",
+  "start_url": "/home-energy",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#8CEA5D",
+  "background_color": "#171216",
+  "display": "fullscreen",
+  "scope": "/home-energy"
+}
