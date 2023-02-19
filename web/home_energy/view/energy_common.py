@@ -18,11 +18,20 @@ def db_timeseries_connect(r):
 def parse_day(day_str):
     return datetime.datetime.strptime(day_str, '%Y-%m-%d')
 
+def get_datetime_from_epoch_in_s(epoch_in_s):
+    return datetime.datetime.fromtimestamp(epoch_in_s)
+
+def format_epoch(epoch_in_ms, format_str):
+    return epoch_in_ms.strftime(format_str)
+
 def get_now_epoch_in_s():
     return int(time.time())
 
 def get_now_epoch_in_ms():
     return  get_now_epoch_in_s() * 1000
+
+def get_epoch_time_s(date):
+    return int(date.strftime("%s"))
 
 def get_epoch_time_ms(date):
     return int(date.strftime("%s")) * 1000

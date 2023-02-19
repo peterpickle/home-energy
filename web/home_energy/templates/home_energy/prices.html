@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Home Energy</title>
+    <title>Home Energy - Prices</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="{% static 'home_energy/manifest.json' %}" />
@@ -13,8 +13,9 @@
     <link rel="stylesheet" href="{% static 'home_energy/usage.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+
     function getAllPrices() {
-        url = "getAllPrices";
+        url = "{% url 'home-energy:get_all_prices' %}";
         $.getJSON(url,
             function(result) {
                 $("#prices_div").html("");
@@ -25,24 +26,24 @@
         );
     }
 
-    window.onload = function() {
-        getAllPrices();
-
-        /*$("#set_boost_60_min_btn").click(function() {
-            doAction("boost_60_min");
-        });*/
-    }
-
     function formatEpochInSec(epoch) {
         date = new Date(epoch * 1000);
         return date.toLocaleDateString()
     }
 
     function addPriceDiv(price) {
-        html = "<div>";
-        html += price.id + " " + formatEpochInSec(price.starttime) + " " + price.down + " " + price.up + " " + price.peak
+        html = "<div id='" + price.id + "'>";
+        html += price.id + " " + formatEpochInSec(price.starttime) + " " + price.down_high + " " + price.up_high + " " + price.peak_down
         html += "</div>";
         $("#prices_div").append(html)
+    }
+
+    window.onload = function() {
+        //getAllPrices();
+
+        /*$("#set_boost_60_min_btn").click(function() {
+            doAction("boost_60_min");
+        });*/
     }
 
     </script>
@@ -50,9 +51,34 @@
 <body>
     <h1>Prices</h1>
     </br>
-    <div id="prices_div">
-    </div>
     <a href="{% url 'home-energy:usage' %}">Usage</a>
-    </br>
+    <br/>
+    <div id="add_price_div">
+        <form action="{% url 'home-energy:add_price' %}" method="post">
+            {% csrf_token %}
+            <table>
+                {{ add_price_form.as_table }}
+            </table>
+            <input type="submit" value="Add">
+        </form>
+    </div>
+    <div id="prices_div">
+    {% for modify_price_form in modify_price_forms %}
+        <div id="{{ price.id }}">
+            <form action="{% url 'home-energy:modify_price' %}" method="post">
+                {% csrf_token %}
+                <table>
+                    {{ modify_price_form.as_table }}
+                </table>
+                <input type="submit" value="Modify">
+            </form>
+            <form action="{% url 'home-energy:remove_price' %}" method="post">
+                {% csrf_token %}
+                {{ modify_price_form.id }}
+                <input type="submit" value="Remove">
+            </form>
+        </div>
+    {% endfor %}
+    </div>
 </body>
 </html>

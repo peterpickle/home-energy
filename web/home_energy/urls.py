@@ -24,7 +24,11 @@ urlpatterns = [
 
     # ex: /home-energy/get_all_prices
     # ex: /home-energy/get_all_prices/
-    path('getAllPrices', views.get_all_prices, name='get_all_prices'),
+    path('get_all_prices', views.get_all_prices, name='get_all_prices'),
+
+    path('add_price', views.add_price, name='add_price'),
+    path('modify_price', views.modify_price, name='modify_price'),
+    path('remove_price', views.remove_price, name='remove_price'),
 
     # ex: /home-energy/debug/p1-reader.html
     path('debug/p1-reader.html', views.debug_p1_reader, name='debug_p1_reader'),
