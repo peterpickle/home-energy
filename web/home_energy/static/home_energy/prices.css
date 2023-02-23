@@ -1,0 +1,66 @@
+body
+{
+    font-family: Arial, Tahoma, sans-serif;
+    font-size: 30pt;
+    text-align: center;
+    background-color: #171216;
+    line-height: normal !important;
+    color: #f4f4f9;
+}
+h1
+{
+    font-size: 50pt;
+}
+form
+{
+    display: inline;
+}
+input[type=date]
+{
+    margin: 10px 0 10px 30px;
+}
+input[type=text]
+{
+    width: 100px;
+    padding: 5px 0px 5px 0px;
+    margin: 5px 40px 5px 10px;
+    border-radius: 6px;
+    /*background-color: #777276;*/
+}
+input[type=submit]
+{
+    padding: 10px 30px 10px 30px;
+    border-radius: 6px;
+}
+.add_price_div
+{
+    border:1px solid #f4f4f9;
+    border-radius: 30px;
+    padding: 10px 0px 10px 0px;
+    margin: 0px 30px 0px 30px;
+}
+.modify_price_div
+{
+    border:1px solid #f4f4f9;
+    border-radius: 30px;
+    padding: 10px 0px 10px 0px;
+    margin: 0px 30px 30px 30px;
+}
+.starttime_div
+{
+    text-align: left;
+}
+.modify_price_form
+{
+
+}
+.remove_price_form
+{
+
+}
+.form_input_table
+{
+    /*display: inline;*/
+    margin: 0 auto 30px auto;
+    text-align: left;
+}

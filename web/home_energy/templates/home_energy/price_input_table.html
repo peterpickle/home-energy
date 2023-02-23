@@ -1,0 +1,33 @@
+                {{ form.non_field_errors }}
+                {{ form.starttime.errors }}
+                {{ form.down_high.errors }}
+                {{ form.down_low.errors }}
+                {{ form.up_high.errors }}
+                {{ form.up_low.errors }}
+                {{ form.peak_down.errors }}
+                {% if FEATURE_GAS %}
+                {{ form.gas.errors }}
+                {% endif %}
+                <div class="starttime_div">
+                    {{ form.starttime }}
+                </div>
+                <table class="form_input_table">
+                    <tr>
+                        <td><label for="{{ form.down_high.id_for_label }}">Down (day)</label></td>
+                        <td>{{ form.down_high }}</td>
+                        <td><label for="{{ form.down_low.id_for_label }}">Down (night)</label></td>
+                        <td>{{ form.down_low }}</td>
+                    </tr>
+                    <tr>
+                        <td><label for="{{ form.up_high.id_for_label }}">Up (day)</label></td>
+                        <td>{{ form.up_high }}</td>
+                        <td><label for="{{ form.up_low.id_for_label }}">Up (night)</label></td>
+                        <td>{{ form.up_low }}</td>
+                    </tr>
+                    <tr>
+                        <td><label for="{{ form.peak_down.id_for_label }}">Peak (Kw/year)</label></td>
+                        <td>{{ form.peak_down }}</td>
+                        <td>{% if FEATURE_GAS %}<label for="{{ form.gas.id_for_label }}">Gas</label>{% endif %}</td>
+                        <td>{% if FEATURE_GAS %}{{ form.gas }}{% endif %}</td>
+                    </tr>
+                </table>
