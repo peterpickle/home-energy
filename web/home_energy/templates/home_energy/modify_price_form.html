@@ -3,11 +3,15 @@
                 {% csrf_token %}
                 {{ form.id }}
                 {% include "home_energy/price_input_table.html" with form=form %}
-                <input type="submit" value="Modify">
+                <button type="submit">
+                    <i class="bi bi-pencil-square"></i> Save
+                </button>
             </form>
             <form action="{% url 'home-energy:remove_price' %}" method="post" class="remove_price_form">
                 {% csrf_token %}
                 {{ form.id }}
-                <input type="submit" value="Remove" onclick="return confirm('Remove this price?');">
+                <button type="submit" onclick="return confirm('Remove this price?');">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
             </form>
         </div>

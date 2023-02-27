@@ -17,20 +17,24 @@ form
 }
 input[type=date]
 {
+    width: 350px;
+    padding: 10px 20px;
     margin: 10px 0 10px 30px;
+    border-radius: 30px;
+    text-align: center;
 }
 input[type=text]
 {
-    width: 100px;
-    padding: 5px 0px 5px 0px;
+    width: 150px;
+    padding: 10px 20px;
     margin: 5px 40px 5px 10px;
-    border-radius: 6px;
-    /*background-color: #777276;*/
+    border-radius: 30px;
+    text-align: right;
 }
-input[type=submit]
+input[type=submit], button
 {
-    padding: 10px 30px 10px 30px;
-    border-radius: 6px;
+    padding: 30px 50px;
+    border-radius: 50px;
 }
 .add_price_div
 {
@@ -63,4 +67,29 @@ input[type=submit]
     /*display: inline;*/
     margin: 0 auto 30px auto;
     text-align: left;
+}
+
+label[for=id_down_high]
+{
+    color: #009ff5;
+}
+label[for=id_down_low]
+{
+    color: #0077b8;
+}
+label[for=id_up_high]
+{
+    color: #8cea5d;
+}
+label[for=id_up_low]
+{
+    color: #4cb517;
+}
+label[for=id_peak_down]
+{
+    color: #dc5665;
+}
+label[for=id_gas]
+{
+    color: #cc1467;
 }
