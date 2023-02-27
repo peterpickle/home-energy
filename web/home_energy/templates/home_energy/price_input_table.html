@@ -13,21 +13,21 @@
                 </div>
                 <table class="form_input_table">
                     <tr>
-                        <td><label for="{{ form.down_high.id_for_label }}">Down (day)</label></td>
+                        <td><label for="{{ form.down_high.id_for_label }}"><i class="bi bi-sun"></i> Down</label></td>
                         <td>{{ form.down_high }}</td>
-                        <td><label for="{{ form.down_low.id_for_label }}">Down (night)</label></td>
+                        <td><label for="{{ form.down_low.id_for_label }}"> <i class="bi bi-moon"></i>Down</label></td>
                         <td>{{ form.down_low }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.up_high.id_for_label }}">Up (day)</label></td>
+                        <td><label for="{{ form.up_high.id_for_label }}"><i class="bi bi-sun"></i> Up</label></td>
                         <td>{{ form.up_high }}</td>
-                        <td><label for="{{ form.up_low.id_for_label }}">Up (night)</label></td>
+                        <td><label for="{{ form.up_low.id_for_label }}"> <i class="bi bi-moon"></i> Up</label></td>
                         <td>{{ form.up_low }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.peak_down.id_for_label }}">Peak (Kw/year)</label></td>
+                        <td><label for="{{ form.peak_down.id_for_label }}"><i class="bi bi-arrow-up-square"></i> Peak (Kw/year)</label></td>
                         <td>{{ form.peak_down }}</td>
-                        <td>{% if FEATURE_GAS %}<label for="{{ form.gas.id_for_label }}">Gas</label>{% endif %}</td>
+                        <td>{% if FEATURE_GAS %}<label for="{{ form.gas.id_for_label }}"><i class="bi bi-fire"></i> Gas</label>{% endif %}</td>
                         <td>{% if FEATURE_GAS %}{{ form.gas }}{% endif %}</td>
                     </tr>
                 </table>
