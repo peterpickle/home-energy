@@ -53,16 +53,24 @@
         setEbusValue(circuit, fieldName, newValue);
     }
 
-    function setSchedule(circuit, fieldName, allDays) {
-        oldValue = $("#current_"+ circuit + "_" + fieldName + "_div").text();
-        newValue = "";
+    function getScheduleOldValue(circuit, fieldName) {
+        return $("#current_"+ circuit + "_" + fieldName + "_div").text();
+    }
 
+    function getScheduleNewValue(circuit, fieldName) {
+        newValue = "";
         for(i = 0; i < 6; i++) {
             if (i != 0) {
                 newValue += ";";
             }
             newValue += $("#" + circuit + "_" + fieldName + "_" + i).val();
         }
+        return newValue;
+    }
+
+    function setSchedule(circuit, fieldName, allDays) {
+        oldValue = getScheduleOldValue(circuit, fieldName);
+        newValue = getScheduleNewValue(circuit, fieldName);
 
         if (newValue != oldValue) {
             //TODO: validate new value
@@ -79,7 +87,6 @@
         getEbusValue("700", "z1RoomTemp");
         getEbusValue("700", "z1DayTemp");
         getEbusValue("700", "z1NightTemp");
-        getEbusValue("700", "DisplayedOutsideTemp");
         getEbusValue("700", "DisplayedOutsideTemp");
         getEbusValue("700", "OpMode");
         getEbusValue("700", "z1Timer." + getDayOfWeek(new Date()));
@@ -106,19 +113,36 @@
                     $("#" + circuit + "_" + outputFieldName + "_" + i).val(times[i]);
                 }
             }
+            hideShowSheduleButton(circuit, outputFieldName);
         } else if (fieldName.includes("OpMode")) {
             $("#current_"+ circuit + "_" + outputFieldName + "_div > *").removeClass("active");
             $("#current_"+ circuit + "_" + outputFieldName + "_" + newValue).addClass("active");
         } else {
             if (fieldName == ("z1RoomTemp")) {
-                newValue = (Math.round(newValue * 100) / 100);
+                newValue = (Math.round(newValue * 100) / 100) + " °C";
             } else if (fieldName == ("State")) {
                 newValue = newValue.split(";");
                 newValue = newValue[newValue.length - 1];
+            } else if (fieldName == ("z1DayTemp")) {
+                newValue += " °C";
+            } else if (fieldName == ("z1NightTemp")) {
+                newValue += " °C";
+            } else if (fieldName == ("DisplayedOutsideTemp")) {
+                newValue += " °C";
+            } else if (fieldName == ("HwcStorageTemp")) {
+                newValue += " °C";
+            } else if (fieldName == ("HwcTempDesired")) {
+                newValue += " °C";
+            } else if (fieldName == ("CylinderChargeHyst")) {
+                newValue += " °C";
             } else if (fieldName == ("Status01")) {
                 newValue = newValue.split(";");
-                newValue = newValue[0] + " " + newValue[1];
-            } else if (fieldName == ("currenterror")) {
+                newValue = newValue[0] + " " + newValue[1] + " °C";
+            } else if (fieldName == ("Hc1ActualFlowTempDesired")) {
+                newValue = (Math.round(newValue * 100) / 100) + " °C";
+            } else if (fieldName == ("CurrentConsumedPower")) {
+                newValue = newValue * 1000 + " W";
+            }else if (fieldName == ("currenterror")) {
                 errors = newValue.split(";");
                 newValue = ""
                 for(i = 0; i < errors.length; i++) {
@@ -165,6 +189,17 @@
         }
     }
 
+    function hideShowSheduleButton(circuit, fieldName) {
+        oldValue = getScheduleOldValue(circuit, fieldName);
+        newValue = getScheduleNewValue(circuit, fieldName);
+
+        if (oldValue != newValue) {
+            $("#set_" + circuit + "_" + fieldName).show();
+        } else {
+            $("#set_" + circuit + "_" + fieldName).hide();
+        }
+    }
+
     window.onload = function() {
         uiAddOptionsForTimeSelect();
         hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
@@ -205,6 +240,9 @@
         });
         $("#current_700_OpMode_night").click(function() {
             setEbusValue("700", "OpMode", "night");
+        });
+        $("#700_z1Timer_schedule > select").on("change", function() {
+            hideShowSheduleButton("700", "z1Timer");
         });
         $("#700_z1Timer_2").on("change", function() {
             hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
@@ -253,6 +291,9 @@
         });
         $("#current_700_HwcOpMode_day").click(function() {
             setEbusValue("700", "HwcOpMode", "day");
+        });
+        $("#700_hwcTimer_schedule > select").on("change", function() {
+            hideShowSheduleButton("700", "hwcTimer");
         });
         $("#700_hwcTimer_2").on("change", function() {
             hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
@@ -311,7 +352,7 @@
 
         <i class="bi bi-clock"></i>
         <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
-        <div>
+        <div id="700_z1Timer_schedule">
             <select id="700_z1Timer_0"></select>
             <select id="700_z1Timer_1"></select>
             <br/>
@@ -351,7 +392,7 @@
 
         <i class="bi bi-clock"></i>
         <div id="current_700_hwcTimer_div" class="current_value" style="display: none;"></div>
-        <div>
+        <div id="700_hwcTimer_schedule">
             <select id="700_hwcTimer_0"></select>
             <select id="700_hwcTimer_1"></select>
             <br/>
@@ -368,16 +409,40 @@
 
     <div class="section_div">
         <h1 class="h1_title">General</h1>
-        <i class="bi bi-chat-left-text"></i> <div id="current_hmu_State_div" class="current_value"></div>
-        <br/>
-        <i class="bi bi-repeat"></i> <div id="current_hmu_Status01_div" class="current_value"></div>
-        <br/>
-        <i class="bi bi-heart"></i>
-        <i class="bi bi-repeat"></i> <div id="current_700_Hc1ActualFlowTempDesired_div" class="current_value"></div>
-        <br/>
-        <i class="bi bi-speedometer"></i> <div id="current_hmu_CurrentConsumedPower_div" class="current_value"></div> W
-        <br/>
-        <div id="current_hmu_currenterror_div" class="current_value"></div>
+        <div class="grid-container-general">
+            <div class="grid-item label">
+                <i class="bi bi-chat-left-text"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_hmu_State_div" class="current_value"></div>
+            </div>
+
+            <div class="grid-item label">
+                <i class="bi bi-repeat"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_hmu_Status01_div" class="current_value"></div>
+            </div>
+
+            <div class="grid-item label">
+                <i class="bi bi-heart"></i>
+                <i class="bi bi-repeat"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_Hc1ActualFlowTempDesired_div" class="current_value"></div>
+            </div>
+
+            <div class="grid-item label">
+                <i class="bi bi-speedometer"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_hmu_CurrentConsumedPower_div" class="current_value"></div>
+            </div>
+
+            <div id="grid-item-general-errors" class="grid-item">
+                <div id="current_hmu_currenterror_div" class="current_value"></div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

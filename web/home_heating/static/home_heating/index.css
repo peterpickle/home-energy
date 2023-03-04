@@ -33,6 +33,25 @@ option
     margin: 30px 30px;
     /*display: inline-block;*/
 }
+.grid-container-general
+{
+    display: grid;
+    grid-template-columns: auto auto;
+}
+.label
+{
+    text-align: right;
+    margin-right: 40px;
+}
+.value
+{
+    text-align: left;
+    margin-left: 40px;
+}
+#grid-item-general-errors
+{
+    grid-column: 1 / span 2;
+}
 .current_value
 {
     display: inline;
@@ -52,6 +71,7 @@ option
     margin: 20px 0px;
     border-radius: 50px;
     cursor: pointer;
+    display: none;
 }
 .mode
 {
