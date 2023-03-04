@@ -128,7 +128,7 @@
             } else if (fieldName == ("z1NightTemp")) {
                 newValue += " °C";
             } else if (fieldName == ("DisplayedOutsideTemp")) {
-                newValue += " °C";
+                newValue = (Math.round(newValue * 100) / 100) + " °C";
             } else if (fieldName == ("HwcStorageTemp")) {
                 newValue += " °C";
             } else if (fieldName == ("HwcTempDesired")) {
@@ -137,7 +137,7 @@
                 newValue += " °C";
             } else if (fieldName == ("Status01")) {
                 newValue = newValue.split(";");
-                newValue = newValue[0] + " " + newValue[1] + " °C";
+                newValue = newValue[0] + " - " + newValue[1] + " °C";
             } else if (fieldName == ("Hc1ActualFlowTempDesired")) {
                 newValue = (Math.round(newValue * 100) / 100) + " °C";
             } else if (fieldName == ("CurrentConsumedPower")) {
@@ -326,43 +326,90 @@
 <body>
     <div class="section_div">
         <h1 class="h1_title">Heating</h1>
-        <i class="bi bi-thermometer-half"></i> <div id="current_700_z1RoomTemp_div" class="current_value"></div>
-        <br/>
+        <div class="grid-container">
+            <!-- row 1 -->
+            <div class="grid-item label-left">
 
-        <input type="button" id="dec_700_z1DayTemp" class="inc_dec_button" value="-"/>
-        <i class="bi bi-thermometer-sun"></i> <div id="current_700_z1DayTemp_div" class="current_value"></div>
-        <input type="button" id="inc_700_z1DayTemp"  class="inc_dec_button" value="+"/>
-        <br/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-thermometer-half"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_z1RoomTemp_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
 
-        <input type="button" id="dec_700_z1NightTemp"  class="inc_dec_button" value="-"/>
-        <i class="bi bi-thermometer-snow"></i> <div id="current_700_z1NightTemp_div" class="current_value"></div>
-        <input type="button" id="inc_700_z1NightTemp"  class="inc_dec_button" value="+"/>
-        <br/>
+            </div>
+            <!-- row 2 -->
+            <div class="grid-item label-left">
+                <input type="button" id="dec_700_z1DayTemp" class="inc_dec_button" value="-"/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-thermometer-sun"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_z1DayTemp_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="inc_700_z1DayTemp"  class="inc_dec_button" value="+"/>
+            </div>
+            <!-- row 3 -->
+            <div class="grid-item label-left">
+                <input type="button" id="dec_700_z1NightTemp"  class="inc_dec_button" value="-"/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-thermometer-snow"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_z1NightTemp_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="inc_700_z1NightTemp"  class="inc_dec_button" value="+"/>
+            </div>
+            <!-- row 4 -->
+            <div class="grid-item label-left">
 
-        <i class="bi bi-house"></i><i class="bi bi-tree"></i> <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div>
-        <br/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-house"></i>
+                <i class="bi bi-tree"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_DisplayedOutsideTemp_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
 
-        <div id="current_700_OpMode_div" class="btn-group mode" role="group">
-            <button type="button" id="current_700_OpMode_off"   class="btn btn-secondary mode_button">Off</button>
-            <button type="button" id="current_700_OpMode_auto"  class="btn btn-secondary mode_button">Auto</button>
-            <button type="button" id="current_700_OpMode_day"   class="btn btn-secondary mode_button">Day</button>
-            <button type="button" id="current_700_OpMode_night" class="btn btn-secondary mode_button">Night</button>
-        </div>
-        <br/>
-
-        <i class="bi bi-clock"></i>
-        <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
-        <div id="700_z1Timer_schedule">
-            <select id="700_z1Timer_0"></select>
-            <select id="700_z1Timer_1"></select>
-            <br/>
-            <select id="700_z1Timer_2"></select>
-            <select id="700_z1Timer_3"></select>
-            <br/>
-            <select id="700_z1Timer_4"></select>
-            <select id="700_z1Timer_5"></select>
-            <div id="700_z1Timer_br"></div>
-            <input type="button" id="set_700_z1Timer" class="set_button" value="Set"/>
+            </div>
+            <!-- row 5 -->
+            <div id="grid-item-heating-mode" class="grid-item">
+                <div id="current_700_OpMode_div" class="btn-group mode" role="group">
+                    <button type="button" id="current_700_OpMode_off"   class="btn btn-secondary mode_button">Off</button>
+                    <button type="button" id="current_700_OpMode_auto"  class="btn btn-secondary mode_button">Auto</button>
+                    <button type="button" id="current_700_OpMode_day"   class="btn btn-secondary mode_button">Day</button>
+                    <button type="button" id="current_700_OpMode_night" class="btn btn-secondary mode_button">Night</button>
+                </div>
+            </div>
+            <!-- row 6 -->
+            <div class="grid-item label-left">
+                <i class="bi bi-clock"></i>
+            </div>
+            <div id="grid-item-heating-schedule" class="grid-item">
+                <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
+                <div id="700_z1Timer_schedule">
+                    <select id="700_z1Timer_0"></select>
+                    <select id="700_z1Timer_1"></select>
+                    <br/>
+                    <select id="700_z1Timer_2"></select>
+                    <select id="700_z1Timer_3"></select>
+                    <br/>
+                    <select id="700_z1Timer_4"></select>
+                    <select id="700_z1Timer_5"></select>
+                    <div id="700_z1Timer_br"></div>
+                </div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="set_700_z1Timer" class="set_button" value="Set"/>
+            </div>
         </div>
     </div>
 
@@ -370,60 +417,114 @@
 
     <div class="section_div">
         <h1 class="h1_title">Water</h1>
-        <i class="bi bi-water"></i><i class="bi bi-thermometer-half"></i> <div id="current_700_HwcStorageTemp_div" class="current_value"></div>
-        <br/>
+        <div class="grid-container">
+            <!-- row 1 -->
+            <div class="grid-item label-left">
 
-        <input type="button" id="dec_700_HwcTempDesired" class="inc_dec_button" value="-"/>
-        <i class="bi bi-heart"></i><i class="bi bi-thermometer-half"></i> <div id="current_700_HwcTempDesired_div" class="current_value"></div>
-        <input type="button" id="inc_700_HwcTempDesired" class="inc_dec_button" value="+"/>
-        <br/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-water"></i>
+                <i class="bi bi-thermometer-half"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_HwcStorageTemp_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
 
-        <input type="button" id="dec_700_CylinderChargeHyst" class="inc_dec_button" value="-"/>
-        <i class="bi bi-moisture"></i> <div id="current_700_CylinderChargeHyst_div" class="current_value"></div>
-        <input type="button" id="inc_700_CylinderChargeHyst" class="inc_dec_button" value="+"/>
-        <br/>
-
-        <div id="current_700_HwcOpMode_div" class="mode btn-group" role="group">
-            <button type="button" id="current_700_HwcOpMode_off"   class="btn btn-secondary mode_button">Off</button>
-            <button type="button" id="current_700_HwcOpMode_auto"  class="btn btn-secondary mode_button">Auto</button>
-            <button type="button" id="current_700_HwcOpMode_day"   class="btn btn-secondary mode_button">Day</button>
+            </div>
+            <!-- row 2 -->
+            <div class="grid-item label-left">
+                <input type="button" id="dec_700_HwcTempDesired" class="inc_dec_button" value="-"/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-heart"></i>
+                <i class="bi bi-thermometer-half"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_HwcTempDesired_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="inc_700_HwcTempDesired" class="inc_dec_button" value="+"/>
+            </div>
+            <!-- row 3 -->
+            <div class="grid-item label-left">
+                <input type="button" id="dec_700_CylinderChargeHyst" class="inc_dec_button" value="-"/>
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-moisture"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_CylinderChargeHyst_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="inc_700_CylinderChargeHyst" class="inc_dec_button" value="+"/>
+            </div>
+            <!-- row 4 -->
+            <div id="grid-item-water-mode" class="grid-item">
+                <div id="current_700_HwcOpMode_div" class="mode btn-group" role="group">
+                    <button type="button" id="current_700_HwcOpMode_off"   class="btn btn-secondary mode_button">Off</button>
+                    <button type="button" id="current_700_HwcOpMode_auto"  class="btn btn-secondary mode_button">Auto</button>
+                    <button type="button" id="current_700_HwcOpMode_day"   class="btn btn-secondary mode_button">Day</button>
+                </div>
+            </div>
+            <!-- row 5 -->
+            <div class="grid-item label-left">
+                <i class="bi bi-clock"></i>
+            </div>
+            <div id="grid-item-water-schedule" class="grid-item">
+                <div id="current_700_hwcTimer_div" class="current_value" style="display: none;"></div>
+                <div id="700_hwcTimer_schedule">
+                    <select id="700_hwcTimer_0"></select>
+                    <select id="700_hwcTimer_1"></select>
+                    <br/>
+                    <select id="700_hwcTimer_2"></select>
+                    <select id="700_hwcTimer_3"></select>
+                    <br/>
+                    <select id="700_hwcTimer_4"></select>
+                    <select id="700_hwcTimer_5"></select>
+                    <div id="700_hwcTimer_br"></div>
+                </div>
+            </div>
+            <div class="grid-item value-right">
+                <input type="button" id="set_700_hwcTimer"  class="set_button" value="Set"/>
+            </div>
         </div>
-        <br/>
 
-        <i class="bi bi-clock"></i>
-        <div id="current_700_hwcTimer_div" class="current_value" style="display: none;"></div>
-        <div id="700_hwcTimer_schedule">
-            <select id="700_hwcTimer_0"></select>
-            <select id="700_hwcTimer_1"></select>
-            <br/>
-            <select id="700_hwcTimer_2"></select>
-            <select id="700_hwcTimer_3"></select>
-            <br/>
-            <select id="700_hwcTimer_4"></select>
-            <select id="700_hwcTimer_5"></select>
-            <div id="700_hwcTimer_br"></div>
-            <input type="button" id="set_700_hwcTimer"  class="set_button" value="Set"/>
-        </div>
         <!-- TODO: show Legionella Day + Hour -->
     </div>
 
     <div class="section_div">
-        <h1 class="h1_title">General</h1>
-        <div class="grid-container-general">
+        <div class="grid-container">
+            <!-- row 1 -->
+            <div class="grid-item label-left">
+
+            </div>
             <div class="grid-item label">
                 <i class="bi bi-chat-left-text"></i>&nbsp;
             </div>
             <div class="grid-item value">
                 <div id="current_hmu_State_div" class="current_value"></div>
             </div>
+            <div class="grid-item value-right">
 
+            </div>
+            <!-- row 2 -->
+            <div class="grid-item label-left">
+
+            </div>
             <div class="grid-item label">
                 <i class="bi bi-repeat"></i>&nbsp;
             </div>
             <div class="grid-item value">
                 <div id="current_hmu_Status01_div" class="current_value"></div>
             </div>
+            <div class="grid-item value-right">
 
+            </div>
+            <!-- row 3 -->
+            <div class="grid-item label-left">
+
+            </div>
             <div class="grid-item label">
                 <i class="bi bi-heart"></i>
                 <i class="bi bi-repeat"></i>&nbsp;
@@ -431,14 +532,23 @@
             <div class="grid-item value">
                 <div id="current_700_Hc1ActualFlowTempDesired_div" class="current_value"></div>
             </div>
+            <div class="grid-item value-right">
 
+            </div>
+            <!-- row 4 -->
+            <div class="grid-item label-left">
+
+            </div>
             <div class="grid-item label">
                 <i class="bi bi-speedometer"></i>&nbsp;
             </div>
             <div class="grid-item value">
                 <div id="current_hmu_CurrentConsumedPower_div" class="current_value"></div>
             </div>
+            <div class="grid-item value-right">
 
+            </div>
+            <!-- row 5 -->
             <div id="grid-item-general-errors" class="grid-item">
                 <div id="current_hmu_currenterror_div" class="current_value"></div>
             </div>

@@ -4,7 +4,7 @@ body
     font-size: 32pt;
     text-align: center;
     background-color: #ffffff;
-    line-height: normal !important;
+    line-height: 55px !important;
 }
 h1
 {
@@ -17,7 +17,7 @@ select
     -webkit-appearance: none;
     font-size: 32pt;
     text-align: center;
-    padding: 5px 20px;
+    padding: 5px 5px;
     margin: 2px 2px;
     border-radius: 30px;
 }
@@ -33,10 +33,18 @@ option
     margin: 30px 30px;
     /*display: inline-block;*/
 }
-.grid-container-general
+.grid-container
 {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 20% 30% 30% 20%;
+}
+.grid-item {
+    margin: 3px 0px;
+    vertical-align: middle;
+}
+.label-left
+{
+    text-align: center;
 }
 .label
 {
@@ -46,11 +54,22 @@ option
 .value
 {
     text-align: left;
-    margin-left: 40px;
 }
+.value-right
+{
+    text-align: center;
+}
+#grid-item-heating-mode,
+#grid-item-water-mode,
 #grid-item-general-errors
 {
-    grid-column: 1 / span 2;
+    grid-column: 1 / span 4;
+    text-align: center;
+}
+#grid-item-heating-schedule,
+#grid-item-water-schedule
+{
+    grid-column: 2 / span 2;
 }
 .current_value
 {
@@ -59,15 +78,15 @@ option
 .inc_dec_button
 {
     font-size: 25pt;
-    padding: 10px 30px;
-    margin: 5px 0px;
+    padding: 0px 35px;
+    margin: 0px 0px;
     border-radius: 50px;
     cursor: pointer;
 }
 .set_button
 {
     font-size: 25pt;
-    padding: 30px 70px;
+    padding: 25px 60px;
     margin: 20px 0px;
     border-radius: 50px;
     cursor: pointer;
