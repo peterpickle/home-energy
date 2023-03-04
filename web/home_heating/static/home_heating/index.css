@@ -10,31 +10,60 @@ h1
 {
     font-size: 40pt;
     font-weight: bold;
-}
-input[type=button]
-{
-    font-size: 25pt;
-    padding: 10px 30px;
-    cursor: pointer;
+    margin-bottom: 20px;
 }
 select
 {
     -webkit-appearance: none;
     font-size: 32pt;
+    text-align: center;
+    padding: 5px 20px;
+    margin: 2px 2px;
+    border-radius: 30px;
 }
 option
 {
     font-size: 32pt;
 }
+.section_div
+{
+    border:1px solid black;
+    border-radius: 30px;
+    padding: 10px;
+    margin: 30px 30px;
+    /*display: inline-block;*/
+}
 .current_value
 {
-    display: inline-block;
+    display: inline;
+}
+.inc_dec_button
+{
+    font-size: 25pt;
+    padding: 10px 30px;
+    margin: 5px 0px;
+    border-radius: 50px;
+    cursor: pointer;
+}
+.set_button
+{
+    font-size: 25pt;
+    padding: 30px 70px;
+    margin: 20px 0px;
+    border-radius: 50px;
+    cursor: pointer;
 }
 .mode
 {
-    width: 360px;
+
 }
 .mode_button
 {
     font-size: 25pt;
+    padding: 10px 30px;
+    margin: 5px 0px;
+    border-radius: 3rem;
+}
+#current_hmu_currenterror_div {
+    color: red;
 }
