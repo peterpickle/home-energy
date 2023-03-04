@@ -64,6 +64,7 @@ option
     margin: 5px 0px;
     border-radius: 3rem;
 }
-#current_hmu_currenterror_div {
+#current_hmu_currenterror_div
+{
     color: red;
 }
