@@ -149,8 +149,26 @@
         );
     }
 
+    function hideShowShedule(id2, id3, id4, id5) {
+        emptyVal = "-:-"
+        if ($(id2).val() == emptyVal &&
+            $(id3).val() == emptyVal &&
+            $(id4).val() == emptyVal &&
+            $(id5).val() == emptyVal) {
+            $(id4).hide();
+            $(id5).hide();
+        } else {
+            $(id4).show();
+            $(id5).show();
+        }
+    }
+
     window.onload = function() {
         uiAddOptionsForTimeSelect();
+        hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
+                        "#700_z1Timer_4", "#700_z1Timer_5");
+        hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
+                        "#700_hwcTimer_4", "#700_hwcTimer_5");
 
         getAllEbusValues();
 
@@ -184,11 +202,27 @@
         $("#current_700_OpMode_night").click(function() {
             setEbusValue("700", "OpMode", "night");
         });
-
+        $("#700_z1Timer_2").on("change", function() {
+            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
+                            "#700_z1Timer_4", "#700_z1Timer_5");
+        });
+        $("#700_z1Timer_3").on("change", function() {
+            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
+                            "#700_z1Timer_4", "#700_z1Timer_5");
+        });
+        $("#700_z1Timer_4").on("change", function() {
+            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
+                            "#700_z1Timer_4", "#700_z1Timer_5");
+        });
+        $("#700_z1Timer_5").on("change", function() {
+            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
+                            "#700_z1Timer_4", "#700_z1Timer_5");
+        });
         $("#set_700_z1Timer").click(function() {
             setSchedule("700", "z1Timer", true);
         });
 
+        <!-- Water -->
         $("#dec_700_HwcTempDesired").click(function() {
             incValue("700", "HwcTempDesired", -1);
         });
@@ -212,7 +246,22 @@
         $("#current_700_HwcOpMode_day").click(function() {
             setEbusValue("700", "HwcOpMode", "day");
         });
-
+        $("#700_hwcTimer_2").on("change", function() {
+            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
+                            "#700_hwcTimer_4", "#700_hwcTimer_5");
+        });
+        $("#700_hwcTimer_3").on("change", function() {
+            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
+                            "#700_hwcTimer_4", "#700_hwcTimer_5");
+        });
+        $("#700_hwcTimer_4").on("change", function() {
+            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
+                            "#700_hwcTimer_4", "#700_hwcTimer_5");
+        });
+        $("#700_hwcTimer_5").on("change", function() {
+            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
+                            "#700_hwcTimer_4", "#700_hwcTimer_5");
+        });
         $("#set_700_hwcTimer").click(function() {
             setSchedule("700", "hwcTimer", true);
         });
