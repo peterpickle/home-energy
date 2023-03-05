@@ -28,7 +28,8 @@ def latest(request):
 def details(request):
     date = request.GET.get('date', '')
     mode = request.GET.get('mode', 1)
-    return HttpResponse(get_detailed_usage.get_detailed_usage(date, mode), content_type="application/json")
+    detailed_usage = get_detailed_usage.get_detailed_usage(date, mode)
+    return HttpResponse(json.dumps(detailed_usage), content_type="application/json")
 
 
 def get_modify_price_forms():

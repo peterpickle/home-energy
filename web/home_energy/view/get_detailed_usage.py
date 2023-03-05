@@ -93,6 +93,7 @@ def add_missing_data(entries, mode, value):
                 entries.append([epoch_time, value])
     return entries
 
+
 '''
 {
   "date": "2021-12-10",
@@ -102,126 +103,92 @@ def add_missing_data(entries, mode, value):
   "detailed_data" : [
     {"t": "timeValue", "u": "upValue", "d": "downValue"},
     {"t": "timeValue", "u": "upValue", "d": "downValue"}
-  ],
-  "detailed_prod" : [
-    {"t": "timeValue", "p": "prodValue"},
-    {"t": "timeValue", "p": "prodValue"}
   ]
 }
 '''
-def generate_json_ouput(day, mode,
-                        total_day_up, total_day_down, peak_day_down, total_prod, total_gas, total_solar_forecast,
-                        up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries):
+def generate_result(day, mode,
+                    total_day_up, total_day_down, peak_day_down, total_prod, total_gas, total_solar_forecast,
+                    up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries):
+    result = {}
     sf_i = 0;
-    nbOfDetailedEntries = 0
+    correction_factor = 1
 
     if mode == Mode.DAY:
         correction_factor = 1000
-    elif mode == Mode.MONTH or mode == Mode.YEAR:
-        correction_factor = 1
 
-    result = '{\n'
-    result += '"date": "' + day.strftime('%Y-%m-%d') + '",\n'
-    result += '"mode": "' + mode.name + '",\n'
-    result += '"total_up": ' + str(total_day_up) + ',\n'
-    result += '"total_down": ' + str(total_day_down) + ',\n'
-    result += '"peak_down": ' + str(peak_day_down) + ',\n'
+    result["date"] = day.strftime('%Y-%m-%d')
+    result["mode"] = mode.name
+    result["total_up"] = total_day_up
+    result["total_down"] = total_day_down
+    result["peak_down"] = peak_day_down
+
     if FEATURE_PRODUCTION:
-        result += '"total_prod": ' + str(total_prod) + ',\n'
+        result["total_prod"]= total_prod
     if FEATURE_GAS:
-        result += '"total_gas": ' + str(total_gas) + ',\n'
+        result["total_gas"] = total_gas
     if FEATURE_SOLAR_FORECAST:
-        result += '"total_solar_forecast": ' + str(total_solar_forecast) + ',\n'
+        result["total_solar_forecast"] = total_solar_forecast
 
-    result += '"detailed_up_down" : [\n'
+    detailed_up_down = []
+
     for i, up_entry in enumerate(up_entries):
-        if i != 0:
-            result += ',\n'
+        detailed_result_entry = {}
         down_entry = down_entries[i]
         if (up_entry[0] == down_entry[0]):
-            nbOfDetailedEntries += 1
-            result += '{"t":' + str(up_entry[0]) + \
-                      ',"u":' + str(up_entry[1] * correction_factor) + \
-                      ',"d":' + str(down_entry[1] * correction_factor) 
+            detailed_result_entry["t"] = up_entry[0]
+            detailed_result_entry["u"] = up_entry[1] * correction_factor
+            detailed_result_entry["d"] = down_entry[1] * correction_factor
 
+            detailed_result_entry["pd"] = None
             peak_down_entry = [item for item in peak_down_entries if item[0] == up_entry[0]]
             if len(peak_down_entry):
                 peak_down_entry = peak_down_entry[0]
-                result += ',"pd":'+ str(peak_down_entry[1] * correction_factor)
-            else:
-                result += ',"pd":null'
+                detailed_result_entry["pd"] = peak_down_entry[1] * correction_factor
 
+            detailed_result_entry["p"] = None
             if FEATURE_PRODUCTION:
                 prod_entry = [item for item in prod_entries if item[0] == up_entry[0]]
                 if len(prod_entry):
                     prod_entry = prod_entry[0]
-                    result += ',"p":' + str(prod_entry[1] * correction_factor)
-                else:
-                    result += ',"p":null'
-            else:
-                result += ',"p":null'
+                    detailed_result_entry["p"] = prod_entry[1] * correction_factor
 
+            detailed_result_entry["g"] = None
             if FEATURE_GAS:
                 gas_entry = [item for item in gas_entries if item[0] == up_entry[0]]
                 if len(gas_entry):
                     gas_entry = gas_entry[0]
-                    result += ',"g":' + str(gas_entry[1])
-                else:
-                    result += ',"g":null'
-            else:
-                result += ',"g":null'
+                    detailed_result_entry["g"] = gas_entry[1]
 
+            detailed_result_entry["sf"] = None
             if FEATURE_SOLAR_FORECAST:
                 solar_forecast_entry = [item for item in solar_forecast_entries if item[0] == up_entry[0]]
                 if len(solar_forecast_entry):
                     solar_forecast_entry = solar_forecast_entry[0]
-                    result += ',"sf":' + str(solar_forecast_entry[1] * correction_factor)
+                    detailed_result_entry["sf"] = solar_forecast_entry[1] * correction_factor
                     sf_i += 1
-                else:
-                    result += ',"sf":null'
-            else:
-                result += ',"sf":null'
 
-            result += '}'
+            detailed_up_down.append(detailed_result_entry)
         else:
             print('Keys don\'t match for up and down entries. i ' + str(i) + ', up_key ' + str(up_entry[0]) + ', down_key ' + str(down_entry[0]))
 
     if FEATURE_SOLAR_FORECAST:
         if sf_i < len(solar_forecast_entries):
             for solar_forecast_entry in solar_forecast_entries[sf_i:]:
-
-                if nbOfDetailedEntries != 0:
-                    result += ',\n'
-
-                nbOfDetailedEntries += 1
-
-                result += '{"t":' + str(solar_forecast_entry[0]) + \
-                      ',"u":null' + \
-                      ',"d":null' + \
-                      ',"pd":null'
+                detailed_result_entry = {}
+                detailed_result_entry["t"] = solar_forecast_entry[0]
+                detailed_result_entry["u"] = None
+                detailed_result_entry["d"] = None
+                detailed_result_entry["pd"] = None
                 if FEATURE_PRODUCTION:
-                    result += ',"p":null'
+                    detailed_result_entry["p"] = None
                 if FEATURE_GAS:
-                    result += ',"g":null'
+                    detailed_result_entry["g"] = None
                 if len(solar_forecast_entry):
-                    result += ',"sf":' + str(solar_forecast_entry[1] * correction_factor)
-                result += '}'
+                    detailed_result_entry["sf"] = solar_forecast_entry[1] * correction_factor
 
+                detailed_up_down.append(detailed_result_entry)
 
-    result += '\n]'
-    '''
-    #report the production in a seperate table
-    if FEATURE_PRODUCTION:
-        result += ',\n'
-        result += '"detailed_prod" : [\n'
-        for i, entry in enumerate(prod_entries):
-            if i != 0:
-                result += ',\n'
-            result += '{"t":' + str(entry[0]) + ',"p":' + str(entry[1] * correction_factor) + '}'
-        result += '\n]'
-    '''
-
-    result += '\n}'
+    result["detailed_up_down"] = detailed_up_down
     return result
 
 def get_electricity_current_hour(rts, dir_str):
@@ -404,10 +371,9 @@ def get_detailed_usage(date_str, mode_str):
     gas_entries = add_missing_data(gas_entries, mode, '0.0')
 
     #generate the output
-    result = generate_json_ouput(day, mode,
-                                total_up, total_down, peak_down, total_prod, total_gas, total_solar_forecast,
-                                up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
-
+    result = generate_result(day, mode,
+                             total_up, total_down, peak_down, total_prod, total_gas, total_solar_forecast,
+                             up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
     return result
 
 if __name__ == '__main__':
