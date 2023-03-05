@@ -11,19 +11,6 @@ if not settings.configured:
 
 FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 
-def generate_json_ouput(up, down, predicted_peak_down, prod=0):
-    result = '{\n'
-    result += '  "up": ' + str(up) + ',\n'
-    result += '  "down": ' + str(down) + ',\n'
-    result += '  "predicted_peak_down": ' + str(predicted_peak_down) + ''
-    if FEATURE_PRODUCTION:
-        result += ',\n'
-        result += '  "prod": ' + str(prod) + '\n'
-    else:
-        result += '\n'
-    result += '}'
-    return result
-
 def convert_usage(value):
     result = float(value)
     result *= 1000
@@ -35,14 +22,6 @@ def set_value_if_data_older_than(data, value, timeout_ms):
         return (data[0], value)
     return data
 
-'''
-{
-  "up": 0,
-  "down": 100,
-  "predicted_peak_down": 2.7,
-  "production": 100,
-}
-'''
 def get_latest():
     r = db_connect()
     rts = db_timeseries_connect(r)
@@ -74,17 +53,16 @@ def get_latest():
         peak_down = peak_down_result[0][1]
     predicted_peak_down = ((peak_down * ms_passed_in_last_quarter) + (latest_down[1] * ms_remaining_in_last_quarter)) / 900000
 
+    result = { "up": convert_usage(latest_up[1]),
+               "down": convert_usage(latest_down[1]),
+               "predicted_peak_down": round(predicted_peak_down, 5)}
+
     if FEATURE_PRODUCTION:
         latest_prod = rts.get("electricity_prod_1min")
         if latest_prod is None:
             latest_prod = (latest_up[0] - 180001, 0.0)
         latest_prod = set_value_if_data_older_than(latest_prod, 0.0, 180000)
-
-    result = generate_json_ouput(convert_usage(latest_up[1]),
-                                 convert_usage(latest_down[1]),
-                                 round(predicted_peak_down, 5),
-                                 convert_usage(latest_prod[1]))
-
+        result["prod"] = convert_usage(latest_prod[1])
 
     return result
 

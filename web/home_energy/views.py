@@ -22,7 +22,7 @@ def usage(request):
 
 @login_required
 def latest(request):
-    return HttpResponse(get_latest.get_latest(), content_type="application/json")
+    return HttpResponse(json.dumps(get_latest.get_latest()), content_type="application/json")
 
 @login_required
 def details(request):
