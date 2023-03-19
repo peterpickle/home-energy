@@ -1,0 +1,98 @@
+#!/usr/bin/python3
+import json
+
+from django.conf import settings
+from home_energy.view.energy_common import *
+from home_energy.view import prices as pr
+
+if not settings.configured:
+    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_CONSUMPTION=1)
+
+FEATURE_GAS = settings.FEATURE_GAS
+FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
+FEATURE_SOLAR_CONSUMPTION = settings.FEATURE_SOLAR_CONSUMPTION
+
+
+def get_period_cost_current_day(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts):
+    period_cost = 0
+    now = get_now_epoch_in_ms()
+    if now >= price_starttime_ms and now <= price_stoptime_ms:
+        unit_price = price.get(unit_name)
+        if unit_price:
+            unit_price = float(unit_price)
+            usage = 0
+            now_start_day = now - (now % 86400000)
+            usage_result = rts.range(timeseries_name, now_start_day, now_start_day + 86400000, align='start', aggregation_type='max', bucket_size_msec=86400000)
+            if len(usage_result):
+                usage = usage_result[0][1]
+            period_cost = usage * unit_price
+
+    return period_cost
+
+def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts):
+    period_cost = 0
+    unit_price = price.get(unit_name)
+    if unit_price:
+        unit_price = float(unit_price)
+        usage = 0
+        usage_result = rts.range(timeseries_name, price_starttime_ms, price_stoptime_ms, align='start', aggregation_type='sum', bucket_size_msec=bucket_size)
+        if len(usage_result):
+            usage = usage_result[0][1]
+        period_cost = usage * unit_price
+
+    return period_cost
+
+def get_total_cost(starttime, stoptime):
+    total_costs = {}
+    r = db_connect()
+    rts = db_timeseries_connect(r)
+
+    total_cost_down_high = 0
+    total_cost_up_high = 0
+    total_cost_gas = 0
+    total_cost_solar_consumption = 0
+
+    starttime_ms = starttime * 1000
+    stoptime_ms = stoptime * 1000
+
+    prices = pr.get_prices_in_range(starttime, stoptime) #TODO: what if not all prices are filled int,then the previous entry is not enough -> index per type
+
+    for i, price in enumerate(prices):
+        price_starttime = int(price["starttime"])
+        if price_starttime < starttime:
+            price_starttime = starttime
+
+        price_stoptime = stoptime
+        if i != len(prices)-1:
+            price_stoptime = int(prices[i+1]["starttime"]) - 1
+
+        price_starttime_ms = price_starttime * 1000
+        price_stoptime_ms = price_stoptime * 1000
+        bucket_size = price_stoptime_ms - price_starttime_ms + 1000
+
+        print(f'{format_epoch(get_datetime_from_epoch_in_s(price_starttime), "%Y-%m-%d %H:%M:%S")} - {format_epoch(get_datetime_from_epoch_in_s(price_stoptime), "%Y-%m-%d %H:%M:%S")}')
+        print(bucket_size/86400000)
+
+        total_cost_down_high += get_period_cost("down_high", "electricity_down_1h", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+        total_cost_up_high   += get_period_cost("up_high", "electricity_up_1h", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+        if FEATURE_GAS:
+            total_cost_up_high   += get_period_cost("gas", "gas_15min", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+        if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
+            total_cost_solar_consumption += get_period_cost("down_high", "electricity_prod_gen_daily_1day", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+            total_cost_solar_consumption += get_period_cost_current_day("down_high", "electricity_prod_gen_daily_1min", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+
+    total_costs["total_cost_down_high"] = total_cost_down_high
+    total_costs["total_cost_up_high"]   = total_cost_up_high
+    if FEATURE_GAS:
+        total_costs["total_cost_gas"]   = total_cost_gas
+    if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
+        total_costs["total_cost_solar_consumption"] = total_cost_solar_consumption - total_cost_up_high
+
+    return total_costs
+
+if __name__ == '__main__':
+    #file executed as script
+
+    result  = get_total_cost(1672527600, 1680299999) #1 jan 2023 - 31 mar 2023 23:59:59
+
+    print(result)

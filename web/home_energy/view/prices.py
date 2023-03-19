@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-
 from home_energy.view.energy_common import *
-#from energy_common import *
 
 def validate_rates(rates):
     allowed_keys = ['down_high', 'down_low', 'up_high', 'up_low', 'peak_down', 'gas']
@@ -95,7 +93,7 @@ def get_prices_in_range(starttime, stoptime):
         price = r.hgetall(id)
         prices.append(price)
 
-    if len(prices) and starttime < int(prices[0]['starttime']):
+    if (len(prices) == 0) or (starttime < int(prices[0]['starttime'])):
         # ZRANGE price.starttime.index 25 0 BYSCORE REV LIMIT 0 1
         price_ids = r.zrange('price.starttime.index', starttime, 0, desc=True, byscore=True, offset=0, num=1)
         if len(price_ids):
