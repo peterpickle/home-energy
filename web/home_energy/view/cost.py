@@ -42,20 +42,12 @@ def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price
 
     return period_cost
 
-def get_total_cost(starttime, stoptime):
-    total_costs = {}
-    r = db_connect()
-    rts = db_timeseries_connect(r)
-
-    total_cost_down_high = 0
-    total_cost_up_high = 0
-    total_cost_gas = 0
-    total_cost_solar_consumption = 0
-
+def get_cost_for_unit(unit_name, timeseries_name, starttime, stoptime, period_cost_function, rts):
+    cost = 0
     starttime_ms = starttime * 1000
     stoptime_ms = stoptime * 1000
-
-    prices = pr.get_prices_in_range(starttime, stoptime) #TODO: what if not all prices are filled int,then the previous entry is not enough -> index per type
+    
+    prices = pr.get_prices_in_range(unit_name, starttime, stoptime)
 
     for i, price in enumerate(prices):
         price_starttime = int(price["starttime"])
@@ -73,13 +65,27 @@ def get_total_cost(starttime, stoptime):
         print(f'{format_epoch(get_datetime_from_epoch_in_s(price_starttime), "%Y-%m-%d %H:%M:%S")} - {format_epoch(get_datetime_from_epoch_in_s(price_stoptime), "%Y-%m-%d %H:%M:%S")}')
         print(bucket_size/86400000)
 
-        total_cost_down_high += get_period_cost("down_high", "electricity_down_1h", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
-        total_cost_up_high   += get_period_cost("up_high", "electricity_up_1h", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
-        if FEATURE_GAS:
-            total_cost_up_high   += get_period_cost("gas", "gas_15min", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
-        if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
-            total_cost_solar_consumption += get_period_cost("down_high", "electricity_prod_gen_daily_1day", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
-            total_cost_solar_consumption += get_period_cost_current_day("down_high", "electricity_prod_gen_daily_1min", price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+        cost += period_cost_function(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+
+    return cost    
+
+def get_total_cost(starttime, stoptime):
+    total_costs = {}
+    r = db_connect()
+    rts = db_timeseries_connect(r)
+
+    total_cost_down_high = 0
+    total_cost_up_high = 0
+    total_cost_gas = 0
+    total_cost_solar_consumption = 0
+
+    total_cost_down_high += get_cost_for_unit("down_high", "electricity_down_1h", starttime, stoptime, get_period_cost, rts)
+    total_cost_up_high   += get_cost_for_unit("up_high", "electricity_up_1h", starttime, stoptime, get_period_cost, rts)
+    if FEATURE_GAS:
+        total_cost_gas   += get_cost_for_unit("gas", "gas_15min", starttime, stoptime, get_period_cost, rts)
+    if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
+        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1day", starttime, stoptime, get_period_cost, rts)
+        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1min", starttime, stoptime, get_period_cost_current_day, rts)
 
     total_costs["total_cost_down_high"] = total_cost_down_high
     total_costs["total_cost_up_high"]   = total_cost_up_high

@@ -91,18 +91,18 @@ def get_all_prices_reversed():
         prices.append(price)
     return prices
 
-def get_prices_in_range(starttime, stoptime):
+def get_prices_in_range(rate_key, starttime, stoptime):
     r = db_connect()
     prices = []
-    # ZRANGE price.starttime.index 25 55 BYSCORE
-    price_ids = r.zrange('price.starttime.index', starttime, stoptime, byscore=True)
+    # ZRANGE price.starttime.index.RATE 25 55 BYSCORE
+    price_ids = r.zrange('price.starttime.index.' + rate_key, starttime, stoptime, byscore=True)
     for id in price_ids:
         price = r.hgetall(id)
         prices.append(price)
 
     if (len(prices) == 0) or (starttime < int(prices[0]['starttime'])):
-        # ZRANGE price.starttime.index 25 0 BYSCORE REV LIMIT 0 1
-        price_ids = r.zrange('price.starttime.index', starttime, 0, desc=True, byscore=True, offset=0, num=1)
+        # ZRANGE price.starttime.index.RATE 25 0 BYSCORE REV LIMIT 0 1
+        price_ids = r.zrange('price.starttime.index.' + rate_key, starttime, 0, desc=True, byscore=True, offset=0, num=1)
         if len(price_ids):
             price = r.hgetall(price_ids[0])
             prices.insert(0, price)        
