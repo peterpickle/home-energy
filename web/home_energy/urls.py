@@ -19,6 +19,11 @@ urlpatterns = [
     path('details', views.details, name='details'),
     path('details/', views.details, name='details'),
 
+    # ex: /home-energy/total_cost
+    # ex: /home-energy/total_cost
+    path('total_cost', views.total_cost, name='total_cost'),
+    path('total_cost/', views.total_cost, name='total_cost'),
+
     # ex: /home-energy/prices.html
     path('prices.html', views.prices, name='prices'),
 

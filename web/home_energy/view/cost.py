@@ -69,7 +69,7 @@ def get_cost_for_unit(unit_name, timeseries_name, starttime, stoptime, period_co
 
     return cost    
 
-def get_total_cost(starttime, stoptime):
+def get_total_costs(starttime, stoptime):
     total_costs = {}
     r = db_connect()
     rts = db_timeseries_connect(r)

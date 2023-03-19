@@ -7,12 +7,14 @@ from django.urls import reverse
 from home_energy.forms import AddPriceForm
 from home_energy.forms import ModifyPriceForm
 from home_energy.forms import RemovePriceForm
+from home_energy.forms import GetTotalCostsForm
 
 from home_energy.view import energy_common as ec
 from home_energy.view import get_latest
 from home_energy.view import get_detailed_usage
 from home_energy.view import p1_reader_debug
 from home_energy.view import prices as pr
+from home_energy.view import cost
 
 import json
 
@@ -30,6 +32,17 @@ def details(request):
     mode = request.GET.get('mode', 1)
     detailed_usage = get_detailed_usage.get_detailed_usage(date, mode)
     return HttpResponse(json.dumps(detailed_usage), content_type="application/json")
+
+@login_required
+def total_cost(request):
+    form = GetTotalCostsForm(request.GET)
+    if form.is_valid():
+        starttime = ec.get_epoch_time_s(form.cleaned_data['starttime'])
+        stoptime = ec.get_epoch_time_s(form.cleaned_data['stoptime'])
+        total_costs = cost.get_total_costs(starttime, stoptime)
+    else:
+        return HttpResponse(json.dumps({"errors" : form.errors}), content_type="application/json")
+    return HttpResponse(json.dumps(total_costs), content_type="application/json")
 
 
 def get_modify_price_forms():

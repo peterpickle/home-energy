@@ -33,3 +33,15 @@ class ModifyPriceForm(AddPriceForm):
 
 class RemovePriceForm(forms.Form):
     id = forms.CharField(required=True, widget=forms.HiddenInput())
+
+class GetTotalCostsForm(forms.Form):
+    starttime = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
+    stoptime  = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        starttime = cleaned_data.get("starttime")
+        stoptime  = cleaned_data.get("stoptime")
+
+        if (stoptime < starttime):
+            raise ValidationError("Starttime must be before stoptime.")
