@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 from home_energy.view.energy_common import *
 
+allowed_rate_keys = ['down_high', 'down_low', 'up_high', 'up_low', 'peak_down', 'gas']
+
 def validate_rates(rates):
-    allowed_keys = ['down_high', 'down_low', 'up_high', 'up_low', 'peak_down', 'gas']
     #validate the keys, only allow the ones we know
-    filtered_keys = rates.keys() & allowed_keys
+    filtered_keys = rates.keys() & allowed_rate_keys
 
     if len(filtered_keys) != len(rates):
         return False, rates
@@ -16,7 +17,6 @@ def validate_rates(rates):
         return 0, filtered_rates
 
     return True, filtered_rates
-
 
 #HMSET price:1 id 1 starttime 0  down 0.1 up 0.01 peak 40
 #ZADD price.starttime.index 0 price:1
@@ -36,11 +36,12 @@ def add_price(starttime, rates):
 
     price = {'id': id, 'starttime': starttime}
     price.update(rates)
-
     
     p = r.pipeline()
     p.hset(id, mapping=price)
     p.zadd('price.starttime.index', {id : starttime})
+    for rate in rates:
+        p.zadd('price.starttime.index.' + rate, {id : starttime})
     p.execute()
     
     return id
@@ -61,9 +62,13 @@ def modify_price(id, starttime, rates):
     price.update(rates)
 
     p = r.pipeline()
+    for rate in allowed_rate_keys:
+        p.zrem('price.starttime.index.' + rate, id)
     p.delete(id)
     p.hset(id, mapping=price)
     p.zadd('price.starttime.index', {id : starttime})
+    for rate in rates:
+        p.zadd('price.starttime.index.' + rate, {id : starttime})
     p.execute()
     
     return 0
@@ -72,6 +77,8 @@ def remove_price(id):
     r = db_connect()
     p = r.pipeline()
     p.zrem('price.starttime.index', id)
+    for rate in allowed_rate_keys:
+        p.zrem('price.starttime.index.' + rate, id)
     p.delete(id)
     p.execute()
 
