@@ -176,3 +176,4 @@ body
 {
     font-size: 30pt;
 }
+svg > g > g.google-visualization-tooltip { pointer-events: none }
