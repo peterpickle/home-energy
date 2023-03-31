@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
     const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
+    const DisplayModeEnum = { "USAGE":1, "COST":2 };
     Object.freeze(ModeEnum);
 
     var FEATURE_CONSUMPTION = {{ FEATURE_CONSUMPTION }};
@@ -25,6 +26,7 @@
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
+    var displayMode = DisplayModeEnum.USAGE;
 
     //chart variables
     var chart;
@@ -105,7 +107,7 @@
     }
 
     function getLatestUsage() {
-        $.getJSON("latest", function(latest) {
+        $.getJSON("latest_usage", function(latest) {
             current_usage_div = document.getElementById("current_usage_div");
 
             if (latest.down > 3150) {
@@ -137,145 +139,230 @@
     }
     getLatestUsage();
 
-    function getDetailedUsage(dayDate) {
-        detailedDate = dayDate;
-        dayStr = dayDate.getFullYear() + '-' + (dayDate.getMonth() + 1).toString().padStart(2, '0') + '-' + dayDate.getDate().toString().padStart(2, '0');
-        $.getJSON("details", 
+    function displayTotals(result) {
+        if (displayMode == DisplayModeEnum.USAGE) {
+            $("#data_field_total_up_div").html(get_fixed_digits(result.total_usage_up));
+            $("#data_field_total_down_div").html(get_fixed_digits(result.total_usage_down));
+            $("#data_field_peak_down_div").html(round(result.total_usage_peak_down, 1));
+
+            if (FEATURE_PRODUCTION)
             {
-                date: dayStr,
+                $("#data_field_total_prod_div").html(get_fixed_digits(result.total_usage_prod));
+            }
+            if (FEATURE_CONSUMPTION)
+            {
+                total_usage_cons = result.total_usage_down + result.total_usage_prod - result.total_usage_up;
+                $("#data_field_total_cons_div").html(get_fixed_digits(total_usage_cons));
+            }
+            if (FEATURE_GAS)
+            {
+                $("#data_field_total_gas_div").html(get_fixed_digits(result.total_usage_gas));
+            }
+            if (FEATURE_SOLAR_CONSUMPTION)
+            {
+                total_usage_solar_cons = result.total_usage_prod - result.total_usage_up;
+                $("#data_field_total_solar_cons_div").html(get_fixed_digits(total_usage_solar_cons));
+            }
+            if (FEATURE_SOLAR_FORECAST)
+            {
+                $("#data_field_total_solar_forecast_div").html(get_fixed_digits(result.total_usage_solar_forecast));
+            }
+        } else if (displayMode == DisplayModeEnum.COST) {
+            $("#data_field_total_up_div").html(get_fixed_digits(result.total_cost_up_high));
+            $("#data_field_total_down_div").html(get_fixed_digits(result.total_cost_down_high));
+            $("#data_field_peak_down_div").html("-");
+
+            if (FEATURE_PRODUCTION)
+            {
+                $("#data_field_total_prod_div").html("-");
+            }
+            if (FEATURE_CONSUMPTION)
+            {
+                $("#data_field_total_cons_div").html("-");
+            }
+            if (FEATURE_GAS)
+            {
+                $("#data_field_total_gas_div").html(get_fixed_digits(result.total_cost_gas));
+            }
+            if (FEATURE_SOLAR_CONSUMPTION)
+            {
+                $("#data_field_total_solar_cons_div").html(get_fixed_digits(result.total_cost_solar_consumption));
+            }
+            if (FEATURE_SOLAR_FORECAST)
+            {
+                $("#data_field_total_solar_forecast_div").html("-");
+            }
+        }
+
+        //adjust the labels
+        if (mode == ModeEnum.YEAR) {
+            $("#data_field_peak_down_label_div").html("PEAK (avg)");
+        } else {
+            $("#data_field_peak_down_label_div").html("PEAK (max)");
+        }
+    }
+
+    function displayChart(result) {
+        if (displayMode == DisplayModeEnum.USAGE || displayMode == DisplayModeEnum.COST) {
+            // Create the data table
+            chartData = new google.visualization.DataTable();
+            p = null;
+            c = null;
+            g = null;
+            sc = null;
+            sf = null;
+
+            chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
+            chartData.addColumn('number', 'Down');
+            chartData.addColumn('number', 'Up');
+            chartData.addColumn('number', 'Production');
+            chartData.addColumn('number', 'Peak Down');
+            chartData.addColumn('number', 'Consumption');
+            chartData.addColumn('number', 'Gas');
+            chartData.addColumn('number', 'Solar Consumption');
+            chartData.addColumn('number', 'Solar Forecast');
+
+            $.each(result.detailed_up_down, function(i, entry) {
+                timestamp = new Date(entry.t);
+                if (FEATURE_PRODUCTION) {
+                    if (entry.p) {
+                        p = -entry.p
+                    } else {
+                        p = null;
+                    }
+                }
+                if (FEATURE_CONSUMPTION) {
+                    if (entry.p <= entry.u) {
+                        c = entry.d;
+                    } else {
+                        c = entry.d + entry.p - entry.u;
+                    }
+                }
+                if (FEATURE_GAS) {
+                    if (entry.g) {
+                        g = entry.g
+                    } else {
+                        g = null;
+                    }
+                }
+                if (FEATURE_SOLAR_CONSUMPTION) {
+                    if (entry.p > entry.u) {
+                        sc = entry.p - entry.u;
+                    } else {
+                        sc = null;
+                    }
+                }
+                if (FEATURE_SOLAR_FORECAST) {
+                    if (entry.sf) {
+                        sf = -entry.sf;
+                    } else {
+                        sf = null;
+                    }
+                }
+                chartData.addRow([timestamp,
+                                  entry.d,
+                                  (entry.u == 0) ? null : -entry.u,
+                                  p,
+                                  entry.pd,
+                                  c,
+                                  g,
+                                  sc,
+                                  sf]);
+            });
+
+            //How dates are displayed in the tooltips
+            dateFormatPattern = ""
+            if (mode == ModeEnum.DAY) {
+                dateFormatPattern = "HH:mm"
+            } else if (mode == ModeEnum.MONTH) {
+                dateFormatPattern = "MMM dd"
+            } else if (mode == ModeEnum.YEAR) {
+                dateFormatPattern = "MMM"
+            }
+            dateFormatter = new google.visualization.DateFormat({
+                pattern: dateFormatPattern
+            });
+            dateFormatter.format(chartData, 0);
+
+            //animations don't work with a dataview
+            //var chartDataView = new google.visualization.DataView(chartData);
+            showHideChartColumns();
+            drawChart(mode, chartDisplayData);
+        }
+    }
+
+    function displayDate(detailedDate) {
+        if (mode == ModeEnum.DAY) {
+            displayDateStr = dayStr;
+        } else if (mode == ModeEnum.MONTH) {
+            displayDateStr = detailedDate.toLocaleString('en', { month: 'long', year: 'numeric'});
+        } else if (mode == ModeEnum.YEAR) {
+            displayDateStr = detailedDate.toLocaleString('en', { year: 'numeric'});
+        }
+        $("#day_date_div").html(displayDateStr);
+    }
+
+    function getDateString(date)
+    {
+        return date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+    }
+
+    function queryAllDataAndDisplay(dayDate) { //TODO: pass the old and new state to this function and the new state, it should figure out what to fetch and display
+        detailedDate = dayDate;
+        dayStr = getDateString(dayDate);
+
+        var startDate;
+        var days;
+
+        if (mode == ModeEnum.DAY) {
+            startDate = dayDate;
+            days = 1;
+        } else if (mode == ModeEnum.MONTH) {
+            startDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), 1);
+            days = new Date(dayDate.getFullYear(), dayDate.getMonth() + 1, 0 /* last day prev month */).getDate();
+        } else if (mode == ModeEnum.YEAR) {
+            startDate = new Date(dayDate.getFullYear(), 0 /* jan */, 1);
+            year = dayDate.getFullYear();
+            if ((0 == year % 4) && (0 != year % 100) || (0 == year % 400)) {
+                //leap year
+                days = 366;
+            } else {
+                days = 365;
+            }
+        }
+        endDate = startDate.addDays(days - 1);
+
+        $.getJSON("detailed_usage",
+            {
+                date: getDateString(startDate),
                 mode: mode
             },
             function(result) {
-                //display the total values
-                $("#data_field_total_up_div").html(get_fixed_digits(result.total_up));
-                $("#data_field_total_down_div").html(get_fixed_digits(result.total_down));
-                $("#data_field_peak_down_div").html(round(result.peak_down, 1));
-
-                if (FEATURE_PRODUCTION)
-                {
-                    $("#data_field_total_prod_div").html(get_fixed_digits(result.total_prod));
-                }
-                if (FEATURE_CONSUMPTION)
-                {
-                    total_cons = result.total_down + result.total_prod - result.total_up;
-                    $("#data_field_total_cons_div").html(get_fixed_digits(total_cons));
-                }
-                if (FEATURE_GAS)
-                {
-                    $("#data_field_total_gas_div").html(get_fixed_digits(result.total_gas));
-                }
-                if (FEATURE_SOLAR_CONSUMPTION)
-                {
-                    total_solar_cons = result.total_prod - result.total_up;
-                    $("#data_field_total_solar_cons_div").html(get_fixed_digits(total_solar_cons));
-                }
-                if (FEATURE_SOLAR_FORECAST)
-                {
-                    $("#data_field_total_solar_forecast_div").html(get_fixed_digits(result.total_solar_forecast));
-                }
-
-                // Create the data table
-                chartData = new google.visualization.DataTable();
-                p = null;
-                c = null;
-                g = null;
-                sc = null;
-                sf = null;
-
-                chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
-                chartData.addColumn('number', 'Down');
-                chartData.addColumn('number', 'Up');
-                chartData.addColumn('number', 'Production');
-                chartData.addColumn('number', 'Peak Down');
-                chartData.addColumn('number', 'Consumption');
-                chartData.addColumn('number', 'Gas');
-                chartData.addColumn('number', 'Solar Consumption');
-                chartData.addColumn('number', 'Solar Forecast');
-
-                $.each(result.detailed_up_down, function(i, entry) {        
-                    timestamp = new Date(entry.t);
-                    if (FEATURE_PRODUCTION) {
-                        if (entry.p) {
-                            p = -entry.p
-                        } else {
-                            p = null;
-                        }
-                    }
-                    if (FEATURE_CONSUMPTION) {
-                        if (entry.p <= entry.u) {
-                            c = entry.d;
-                        } else {
-                            c = entry.d + entry.p - entry.u;
-                        }
-                    }
-                    if (FEATURE_GAS) {
-                        if (entry.g) {
-                            g = entry.g
-                        } else {
-                            g = null;
-                        }
-                    }
-                    if (FEATURE_SOLAR_CONSUMPTION) {
-                        if (entry.p > entry.u) {
-                            sc = entry.p - entry.u;
-                        } else {
-                            sc = null;
-                        }
-                    }
-                    if (FEATURE_SOLAR_FORECAST) {
-                        if (entry.sf) {
-                            sf = -entry.sf;
-                        } else {
-                            sf = null;
-                        }
-                    }
-                    chartData.addRow([timestamp,
-                                      entry.d,
-                                      (entry.u == 0) ? null : -entry.u,
-                                      p,
-                                      entry.pd,
-                                      c,
-                                      g,
-                                      sc,
-                                      sf]);
-                });
-
-                //How dates are displayed in the tooltips
-                dateFormatPattern = ""
-                if (mode == ModeEnum.DAY) {
-                    dateFormatPattern = "HH:mm"
-                } else if (mode == ModeEnum.MONTH) {
-                    dateFormatPattern = "MMM dd"
-                } else if (mode == ModeEnum.YEAR) {
-                    dateFormatPattern = "MMM"
-                }
-                dateFormatter = new google.visualization.DateFormat({ 
-                    pattern: dateFormatPattern
-                });
-                dateFormatter.format(chartData, 0);
-
-                //animations don't work with a dataview
-                //var chartDataView = new google.visualization.DataView(chartData);
-                showHideChartColumns();
-                drawChart(mode, chartDisplayData);
-
-                //display the date
-                if (mode == ModeEnum.DAY) {
-                    displayDateStr = dayStr;
-                } else if (mode == ModeEnum.MONTH) {
-                    displayDateStr = detailedDate.toLocaleString('en', { month: 'long', year: 'numeric'});
-                } else if (mode == ModeEnum.YEAR) {
-                    displayDateStr = detailedDate.toLocaleString('en', { year: 'numeric'});
-                }
-                $("#day_date_div").html(displayDateStr);
-
-                //adjust the labels
-                if (mode == ModeEnum.YEAR) {
-                    $("#data_field_peak_down_label_div").html("PEAK (avg)");
-                } else {
-                    $("#data_field_peak_down_label_div").html("PEAK (max)");
-                }
+                displayChart(result);
             });
+
+        if (displayMode == DisplayModeEnum.USAGE) {
+            $.getJSON("total_usage",
+                {
+                    startdate: getDateString(startDate),
+                    enddate: getDateString(endDate),
+                    mode: mode
+                },
+                function(result) {
+                    displayTotals(result);
+                });
+        } else if (displayMode == DisplayModeEnum.COST) {
+            $.getJSON("total_cost",
+                {
+                    startdate: getDateString(startDate),
+                    enddate: getDateString(endDate),
+                    mode: mode
+                },
+                function(result) {
+                    displayTotals(result);
+                });
+        }
+        displayDate(detailedDate);
     }
 
     function showHideChartColumns() {
@@ -427,7 +514,7 @@
             function() {
                 if (mode != ModeEnum.YEAR) {
                     mode = ModeEnum.YEAR;
-                    getDetailedUsage(detailedDate);
+                    queryAllDataAndDisplay(detailedDate);
 
                     $("#mode_day_div").removeClass("active");
                     $("#mode_month_div").removeClass("active");
@@ -439,7 +526,7 @@
             function() {
                 if (mode != ModeEnum.MONTH) {
                     mode = ModeEnum.MONTH;
-                    getDetailedUsage(detailedDate);
+                    queryAllDataAndDisplay(detailedDate);
 
                     $("#mode_day_div").removeClass("active");
                     $("#mode_month_div").addClass("active");
@@ -451,7 +538,7 @@
             function() {
                 if (mode != ModeEnum.DAY) {
                     mode = ModeEnum.DAY;
-                    getDetailedUsage(detailedDate);
+                    queryAllDataAndDisplay(detailedDate);
 
                     $("#mode_day_div").addClass("active");
                     $("#mode_month_div").removeClass("active");
@@ -468,7 +555,7 @@
                 } else if (mode == ModeEnum.YEAR) {
                     prevDate = detailedDate.substractYears(1);
                 }
-                getDetailedUsage(prevDate);
+                queryAllDataAndDisplay(prevDate);
             }
         );
         $("#controls_next_1_div").click(
@@ -480,7 +567,7 @@
                 } else if (mode == ModeEnum.YEAR) {
                     nextDate = detailedDate.addYears(1);
                 }
-                getDetailedUsage(nextDate);
+                queryAllDataAndDisplay(nextDate);
             }
         );
         $("#controls_prev_2_div").click(
@@ -492,7 +579,7 @@
                 } else if (mode == ModeEnum.YEAR) {
                     prevDate = detailedDate.substractYears(2);
                 }
-                getDetailedUsage(prevDate);
+                queryAllDataAndDisplay(prevDate);
             }
         );
         $("#controls_next_2_div").click(
@@ -504,13 +591,13 @@
                 } else if (mode == ModeEnum.YEAR) {
                     nextDate = detailedDate.addYears(2);
                 }
-                getDetailedUsage(nextDate);
+                queryAllDataAndDisplay(nextDate);
             }
         );
         $("#day_date_div").click(
             function() {
-                //refresh detailed data
-                getDetailedUsage(detailedDate);
+                //refresh
+                queryAllDataAndDisplay(detailedDate);
             }
         );
         $("#data_field_total_up_div").click(
@@ -833,6 +920,21 @@
                 }
             }
         );
+        $("#cost_button").click(
+            function() {
+                if (displayMode == DisplayModeEnum.USAGE) {
+                    displayMode = DisplayModeEnum.COST;
+                    queryAllDataAndDisplay(detailedDate);
+                    $("#cost_toggle").removeClass("bi-toggle-off");
+                    $("#cost_toggle").addClass("bi-toggle-on");
+                } else {
+                    displayMode = DisplayModeEnum.USAGE;
+                    queryAllDataAndDisplay(detailedDate);
+                    $("#cost_toggle").removeClass("bi-toggle-on");
+                    $("#cost_toggle").addClass("bi-toggle-off");
+                }
+            }
+        );
     }
 
     /* charts */
@@ -840,10 +942,10 @@
     google.charts.load('current', {'packages':['corechart']});
 
     // Set a callback to run when the Google Visualization API is loaded.
-    google.charts.setOnLoadCallback(getDetailedDataAndDrawChart);
+    google.charts.setOnLoadCallback(queryAllDataAndDisplayNoParams);
 
-    function getDetailedDataAndDrawChart() {
-        getDetailedUsage(detailedDate);
+    function queryAllDataAndDisplayNoParams() {
+        queryAllDataAndDisplay(detailedDate);
     }
 
     function drawChart(mode, data) {
@@ -1041,6 +1143,12 @@
             <td><div class="data_field"></div><div class="data_field_label"></div></td>
         </tr>
     </table>
+    <div type="button" id="cost_button">
+        <i id="cost_toggle" class="bi bi-toggle-off"></i>
+        <i class="bi bi-currency-exchange"></i>
+    </div>
+    <br>
     <a href="{% url 'home-energy:prices' %}" class="a_prices">Set Prices</a>
+
 </body>
 </html>

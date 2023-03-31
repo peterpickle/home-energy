@@ -13,10 +13,10 @@ FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 FEATURE_SOLAR_CONSUMPTION = settings.FEATURE_SOLAR_CONSUMPTION
 
 
-def get_period_cost_current_day(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts):
+def get_period_cost_current_day(unit_name, timeseries_name, price, price_starttime_ms, price_endtime_ms, bucket_size, rts):
     period_cost = 0
     now = get_now_epoch_in_ms()
-    if now >= price_starttime_ms and now <= price_stoptime_ms:
+    if now >= price_starttime_ms and now <= price_endtime_ms:
         unit_price = price.get(unit_name)
         if unit_price:
             unit_price = float(unit_price)
@@ -29,47 +29,47 @@ def get_period_cost_current_day(unit_name, timeseries_name, price, price_startti
 
     return period_cost
 
-def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts):
+def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price_endtime_ms, bucket_size, rts):
     period_cost = 0
     unit_price = price.get(unit_name)
     if unit_price:
         unit_price = float(unit_price)
         usage = 0
-        usage_result = rts.range(timeseries_name, price_starttime_ms, price_stoptime_ms, align='start', aggregation_type='sum', bucket_size_msec=bucket_size)
+        usage_result = rts.range(timeseries_name, price_starttime_ms, price_endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=bucket_size)
         if len(usage_result):
             usage = usage_result[0][1]
         period_cost = usage * unit_price
 
     return period_cost
 
-def get_cost_for_unit(unit_name, timeseries_name, starttime, stoptime, period_cost_function, rts):
+def get_cost_for_unit(unit_name, timeseries_name, starttime, endtime, period_cost_function, rts):
     cost = 0
     starttime_ms = starttime * 1000
-    stoptime_ms = stoptime * 1000
+    endtime_ms = endtime * 1000
     
-    prices = pr.get_prices_in_range(unit_name, starttime, stoptime)
+    prices = pr.get_prices_in_range(unit_name, starttime, endtime)
 
     for i, price in enumerate(prices):
         price_starttime = int(price["starttime"])
         if price_starttime < starttime:
             price_starttime = starttime
 
-        price_stoptime = stoptime
+        price_endtime = endtime
         if i != len(prices)-1:
-            price_stoptime = int(prices[i+1]["starttime"]) - 1
+            price_endtime = int(prices[i+1]["starttime"]) - 1
 
         price_starttime_ms = price_starttime * 1000
-        price_stoptime_ms = price_stoptime * 1000
-        bucket_size = price_stoptime_ms - price_starttime_ms + 1000
+        price_endtime_ms = price_endtime * 1000
+        bucket_size = price_endtime_ms - price_starttime_ms + 1000
 
-        print(f'{format_epoch(get_datetime_from_epoch_in_s(price_starttime), "%Y-%m-%d %H:%M:%S")} - {format_epoch(get_datetime_from_epoch_in_s(price_stoptime), "%Y-%m-%d %H:%M:%S")}')
-        print(bucket_size/86400000)
+        #print(f'{format_epoch(get_datetime_from_epoch_in_s(price_starttime), "%Y-%m-%d %H:%M:%S")} - {format_epoch(get_datetime_from_epoch_in_s(price_endtime), "%Y-%m-%d %H:%M:%S")}')
+        #print(bucket_size / 86400000)
 
-        cost += period_cost_function(unit_name, timeseries_name, price, price_starttime_ms, price_stoptime_ms, bucket_size, rts)
+        cost += period_cost_function(unit_name, timeseries_name, price, price_starttime_ms, price_endtime_ms, bucket_size, rts)
 
     return cost    
 
-def get_total_costs(starttime, stoptime):
+def get_total_costs(starttime, endtime, mode):
     total_costs = {}
     r = db_connect()
     rts = db_timeseries_connect(r)
@@ -79,20 +79,24 @@ def get_total_costs(starttime, stoptime):
     total_cost_gas = 0
     total_cost_solar_consumption = 0
 
-    total_cost_down_high += get_cost_for_unit("down_high", "electricity_down_1h", starttime, stoptime, get_period_cost, rts)
-    total_cost_up_high   += get_cost_for_unit("up_high", "electricity_up_1h", starttime, stoptime, get_period_cost, rts)
+    total_cost_down_high += get_cost_for_unit("down_high", "electricity_down_1h", starttime, endtime, get_period_cost, rts)
+    total_cost_up_high   += get_cost_for_unit("up_high", "electricity_up_1h", starttime, endtime, get_period_cost, rts)
     if FEATURE_GAS:
-        total_cost_gas   += get_cost_for_unit("gas", "gas_15min", starttime, stoptime, get_period_cost, rts)
+        total_cost_gas   += get_cost_for_unit("gas", "gas_15min", starttime, endtime, get_period_cost, rts)
     if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
-        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1day", starttime, stoptime, get_period_cost, rts)
-        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1min", starttime, stoptime, get_period_cost_current_day, rts)
+        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1day", starttime, endtime, get_period_cost, rts)
+        total_cost_solar_consumption += get_cost_for_unit("down_high", "electricity_prod_gen_daily_1min", starttime, endtime, get_period_cost_current_day, rts)
+        total_cost_solar_consumption -= get_cost_for_unit("down_high", "electricity_up_1h", starttime, endtime, get_period_cost, rts)
+        total_cost_solar_consumption -= get_cost_for_unit("up_high",   "electricity_prod_gen_daily_1day", starttime, endtime, get_period_cost, rts)
+        total_cost_solar_consumption -= get_cost_for_unit("up_high",   "electricity_prod_gen_daily_1min", starttime, endtime, get_period_cost_current_day, rts)
+        total_cost_solar_consumption += total_cost_up_high
 
     total_costs["total_cost_down_high"] = total_cost_down_high
     total_costs["total_cost_up_high"]   = total_cost_up_high
     if FEATURE_GAS:
         total_costs["total_cost_gas"]   = total_cost_gas
     if FEATURE_PRODUCTION and FEATURE_SOLAR_CONSUMPTION:
-        total_costs["total_cost_solar_consumption"] = total_cost_solar_consumption - total_cost_up_high
+        total_costs["total_cost_solar_consumption"] = total_cost_solar_consumption
 
     return total_costs
 

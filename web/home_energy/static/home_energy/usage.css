@@ -172,6 +172,12 @@ body
 {
     color: #fed9b7;
 }
+#cost_button
+{
+    color: #f4f4f9;
+    font-size: 30pt;
+    border-radius: 3rem;
+}
 .a_prices
 {
     font-size: 30pt;

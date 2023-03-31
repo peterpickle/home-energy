@@ -9,15 +9,20 @@ urlpatterns = [
     # ex: /home-energy/usage.html
     path('usage.html', views.usage, name='usage'),
 
-    # ex: /home-energy/latest
-    # ex: /home-energy/latest/
-    path('latest', views.latest, name='latest'),
-    path('latest/', views.latest, name='latest'),
+    # ex: /home-energy/latest_usage
+    # ex: /home-energy/latest_usage/
+    path('latest_usage', views.latest_usage, name='latest_usage'),
+    path('latest_usage/', views.latest_usage, name='latest_usage'),
 
-    # ex: /home-energy/details
-    # ex: /home-energy/details/
-    path('details', views.details, name='details'),
-    path('details/', views.details, name='details'),
+    # ex: /home-energy/detailed_usage
+    # ex: /home-energy/detailed_usage/
+    path('detailed_usage', views.detailed_usage, name='detailed_usage'),
+    path('detailed_usage/', views.detailed_usage, name='detailed_usage'),
+
+    # ex: /home-energy/total_usage
+    # ex: /home-energy/total_usage
+    path('total_usage', views.total_usage, name='total_usage'),
+    path('total_usage/', views.total_usage, name='total_usage'),
 
     # ex: /home-energy/total_cost
     # ex: /home-energy/total_cost

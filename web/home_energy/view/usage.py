@@ -21,6 +21,8 @@ day_bucket_size_msec = 3 * 60 * 1000
 if FEATURE_GAS:
     day_bucket_size_msec = 5 * 60 * 1000
 
+r = db_connect()
+rts = db_timeseries_connect(r)
 
 class Mode(Enum):
     DAY = 1
@@ -96,10 +98,6 @@ def add_missing_data(entries, mode, value):
 
 '''
 {
-  "date": "2021-12-10",
-  "total_day_up": "totalUpValue",
-  "total_day_down": "totalDownValue",
-  "peak_day_down": "peakDownValue",
   "detailed_data" : [
     {"t": "timeValue", "u": "upValue", "d": "downValue"},
     {"t": "timeValue", "u": "upValue", "d": "downValue"}
@@ -107,7 +105,6 @@ def add_missing_data(entries, mode, value):
 }
 '''
 def generate_result(day, mode,
-                    total_day_up, total_day_down, peak_day_down, total_prod, total_gas, total_solar_forecast,
                     up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries):
     result = {}
     sf_i = 0;
@@ -118,16 +115,6 @@ def generate_result(day, mode,
 
     result["date"] = day.strftime('%Y-%m-%d')
     result["mode"] = mode.name
-    result["total_up"] = total_day_up
-    result["total_down"] = total_day_down
-    result["peak_down"] = peak_day_down
-
-    if FEATURE_PRODUCTION:
-        result["total_prod"]= total_prod
-    if FEATURE_GAS:
-        result["total_gas"] = total_gas
-    if FEATURE_SOLAR_FORECAST:
-        result["total_solar_forecast"] = total_solar_forecast
 
     detailed_up_down = []
 
@@ -225,9 +212,6 @@ def get_detailed_usage(date_str, mode_str):
     end_time = get_epoch_end_time(start_time, days)
     total_bucket_size = days * 86400000
 
-    r = db_connect()
-    rts = db_timeseries_connect(r)
-
     prod_entries = []
     gas_entries = []
     solar_forecast_entries = []
@@ -295,33 +279,66 @@ def get_detailed_usage(date_str, mode_str):
                             prod_result = [(month_start_epoch, today_prod_result[0][1])]
                 prod_entries.extend(prod_result)
 
+    #Add missing data at end
+    up_entries = add_missing_data(up_entries, mode, 0.0)
+    down_entries = add_missing_data(down_entries, mode, 0.0)
+    peak_down_entries = add_missing_data(peak_down_entries, mode, 0.0)
+    prod_entries = add_missing_data(prod_entries, mode, 'null')
+    gas_entries = add_missing_data(gas_entries, mode, '0.0')
+
+    #generate the output
+    result = generate_result(day, mode,
+                             up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
+    return result
+
+def get_total_usage(starttime, endtime, mode):
+    total_usage = {}
+
+    mode = Mode(mode)
+    now = get_now_epoch_in_ms()
+    starttime_ms = starttime * 1000
+    endtime_ms = endtime * 1000
+    total_bucket_size = endtime_ms - starttime_ms
+
     #Get total usage
     #TS.RANGE electricity_down_1h <startTime> <stopTime> AGGREGATION SUM 86400000
     total_up = 0
     total_down = 0
-    total_up_result = rts.range("electricity_up_1h", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
-    total_down_result = rts.range("electricity_down_1h", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+    total_up_result = rts.range("electricity_up_1h", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+    total_down_result = rts.range("electricity_down_1h", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
     if len(total_up_result):
         total_up = total_up_result[0][1]
     if len(total_down_result):
         total_down = total_down_result[0][1]
     
-    if now >= start_time and now <= end_time:
+    if now >= starttime and now <= endtime:
         #add the last/current hour
         total_up += get_electricity_current_hour(rts, "up")
         total_down += get_electricity_current_hour(rts, "down")
 
     #Get peak usage
-
     peak_down = 0
-    if mode != Mode.YEAR:
+    if mode != Mode.YEAR: #TODO: automatically detect based on period >= 1year == avg, else max. Keep flex period in mind e.g.: may 2021 to may 2022
         # Show the MAX peak
-        #TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
-        peak_down_result = rts.range("electricity_down_15min", start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
+        # TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
+        peak_down_result = rts.range("electricity_down_15min", starttime_ms, endtime_ms, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
         if len(peak_down_result):
             peak_down = peak_down_result[0][1]
     else:
         # Show the AVG peak of the MAX of the months
+        # This requires getting the peak of each month
+        peak_down_entries = []
+        start_day = get_datetime_from_epoch_in_s(starttime)
+        start_day = start_day.replace(day=1)
+        for i in range(1, 13):
+            month_start = start_day.replace(month=i)
+            month_nb_of_days = calendar.monthrange(month_start.year, month_start.month)[1]
+            month_start_epoch = get_epoch_time_ms(month_start)
+            month_end_epoch = get_epoch_end_time(month_start_epoch, month_nb_of_days)
+            month_bucket_size = month_nb_of_days * 86400000
+
+            peak_down_entries.extend(rts.range("electricity_down_15min", month_start_epoch, month_end_epoch, align='start', aggregation_type='max', bucket_size_msec=month_bucket_size))
+
         nb_of_peak_entries = 0;
         for month_peak_entry in peak_down_entries:
             peak_down += month_peak_entry[1]
@@ -334,15 +351,15 @@ def get_detailed_usage(date_str, mode_str):
     if FEATURE_PRODUCTION:
         if mode == Mode.DAY:
             #TS.MRANGE - + AGGREGATION max 86400000 FILTER value=dayGen GROUPBY value REDUCE max
-            total_prod_result = rts.mrange(start_time, end_time, align='start', aggregation_type='max', bucket_size_msec=86400000, filters=['type=prod', 'value=dayGen'], groupby='value', reduce='max')
-            total_prod_result =  get_entries(total_prod_result, 'value', 'dayGen')
+            total_prod_result = rts.mrange(starttime_ms, endtime_ms, align='start', aggregation_type='max', bucket_size_msec=86400000, filters=['type=prod', 'value=dayGen'], groupby='value', reduce='max')
+            total_prod_result = get_entries(total_prod_result, 'value', 'dayGen')
             if total_prod_result:
                 total_prod =  total_prod_result[0][1]
         elif mode == Mode.MONTH or mode == Mode.YEAR:
-            total_prod_result = rts.range("electricity_prod_gen_daily_1day", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+            total_prod_result = rts.range("electricity_prod_gen_daily_1day", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
             if len(total_prod_result):
                 total_prod = total_prod_result[0][1]
-            if now >= start_time and now <= end_time:
+            if now >= starttime and now <= endtime:
                 #add the current day
                 now_start_day = now - (now % 86400000)
                 total_prod_result = rts.range("electricity_prod_gen_daily_1min", now_start_day, now_start_day + 86400000, align='start', aggregation_type='max', bucket_size_msec=86400000)
@@ -352,28 +369,80 @@ def get_detailed_usage(date_str, mode_str):
     #total gas
     total_gas = 0
     if FEATURE_GAS:
-        total_gas_result = rts.range("gas_15min", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+        total_gas_result = rts.range("gas_15min", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
         if len(total_gas_result):
             total_gas = total_gas_result[0][1]
 
     #total solar forecast
     total_solar_forecast = 0
     if FEATURE_SOLAR_FORECAST:
-        total_solar_forecast_result = rts.range("solar_forecast_1h", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+        total_solar_forecast_result = rts.range("solar_forecast_1h", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
         if len(total_solar_forecast_result):
             total_solar_forecast = total_solar_forecast_result[0][1]
 
-    #Add missing data at end
-    up_entries = add_missing_data(up_entries, mode, 0.0)
-    down_entries = add_missing_data(down_entries, mode, 0.0)
-    peak_down_entries = add_missing_data(peak_down_entries, mode, 0.0)
-    prod_entries = add_missing_data(prod_entries, mode, 'null')
-    gas_entries = add_missing_data(gas_entries, mode, '0.0')
 
-    #generate the output
-    result = generate_result(day, mode,
-                             total_up, total_down, peak_down, total_prod, total_gas, total_solar_forecast,
-                             up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
+    total_usage["total_usage_up"] = total_up
+    total_usage["total_usage_down"] = total_down
+    total_usage["total_usage_peak_down"] = peak_down
+    if FEATURE_PRODUCTION:
+        total_usage["total_usage_prod"] = total_prod
+    if FEATURE_GAS:
+        total_usage["total_usage_gas"] = total_gas
+    if FEATURE_SOLAR_FORECAST:
+        total_usage["total_usage_solar_forecast"] = total_solar_forecast
+
+    return total_usage
+
+def convert_usage(value):
+    result = float(value)
+    result *= 1000
+    return int(result)
+
+def set_value_if_data_older_than(data, value, timeout_ms):
+    now = int(time.time() * 1000)
+    if (now - data[0]) >= timeout_ms:
+        return (data[0], value)
+    return data
+
+def get_latest_usage():
+    #redis command: xrevrange elektricity + - COUNT 1
+    #latest_stream_entry = r.xrevrange("electricity", max=u'+', min=u'-', count=1)
+
+    latest_prod = (0.0, 0.0)
+
+    #redis command: TS.GET electricity_down_sec
+    latest_up = rts.get("electricity_up_sec")
+    latest_down = rts.get("electricity_down_sec")
+
+    if latest_up is None or latest_down is None:
+        return generate_json_ouput(0, 0, 0, 0)
+
+    latest_up = set_value_if_data_older_than(latest_up, -0.001, 10000)
+    latest_down = set_value_if_data_older_than(latest_down, -0.001, 10000)
+
+    #predict the peak usage of the current quarter (if the production remains the same untill the end of the quarter)
+    peak_down = 0
+    predicted_peak_down = 0
+    ms_passed_in_last_quarter = latest_down[0] % 900000
+    ms_remaining_in_last_quarter = 900000 - ms_passed_in_last_quarter
+    last_quarter_start_time = latest_down[0] - ms_passed_in_last_quarter
+    last_quarter_end_time = last_quarter_start_time + 900000 - 1
+    peak_down_result = rts.range("electricity_down_sec", last_quarter_start_time, last_quarter_end_time, align='start', aggregation_type='avg', bucket_size_msec=900000)
+    if len(peak_down_result):
+        peak_down = peak_down_result[0][1]
+    predicted_peak_down = ((peak_down * ms_passed_in_last_quarter) + (latest_down[1] * ms_remaining_in_last_quarter)) / 900000
+
+    result = { "up": convert_usage(latest_up[1]),
+               "down": convert_usage(latest_down[1]),
+               "predicted_peak_down": round(predicted_peak_down, 5)}
+
+    if FEATURE_PRODUCTION:
+        latest_prod = rts.get("electricity_prod_1min")
+        if latest_prod is None:
+            latest_prod = (latest_up[0] - 180001, 0.0)
+        latest_prod = set_value_if_data_older_than(latest_prod, 0.0, 180000)
+        result["prod"] = convert_usage(latest_prod[1])
+
     return result
 
 if __name__ == '__main__':

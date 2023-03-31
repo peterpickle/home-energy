@@ -1,17 +1,15 @@
+import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
 
-from home_energy.forms import AddPriceForm
-from home_energy.forms import ModifyPriceForm
-from home_energy.forms import RemovePriceForm
-from home_energy.forms import GetTotalCostsForm
+from home_energy.forms import *
 
 from home_energy.view import energy_common as ec
-from home_energy.view import get_latest
-from home_energy.view import get_detailed_usage
+from home_energy.view import usage as u
 from home_energy.view import p1_reader_debug
 from home_energy.view import prices as pr
 from home_energy.view import cost
@@ -23,23 +21,36 @@ def usage(request):
     return render(request, 'home_energy/usage.html')
 
 @login_required
-def latest(request):
-    return HttpResponse(json.dumps(get_latest.get_latest()), content_type="application/json")
+def latest_usage(request):
+    return HttpResponse(json.dumps(u.get_latest_usage()), content_type="application/json")
 
 @login_required
-def details(request):
+def detailed_usage(request):
     date = request.GET.get('date', '')
     mode = request.GET.get('mode', 1)
-    detailed_usage = get_detailed_usage.get_detailed_usage(date, mode)
+    detailed_usage = u.get_detailed_usage(date, mode)
     return HttpResponse(json.dumps(detailed_usage), content_type="application/json")
 
 @login_required
-def total_cost(request):
-    form = GetTotalCostsForm(request.GET)
+def total_usage(request):
+    form = GetTotalsForm(request.GET)
     if form.is_valid():
-        starttime = ec.get_epoch_time_s(form.cleaned_data['starttime'])
-        stoptime = ec.get_epoch_time_s(form.cleaned_data['stoptime'])
-        total_costs = cost.get_total_costs(starttime, stoptime)
+        starttime = ec.get_epoch_time_s(form.cleaned_data['startdate'])
+        endtime = ec.get_epoch_time_s(form.cleaned_data['enddate'] + datetime.timedelta(days=1))
+        mode = form.cleaned_data['mode']
+        total_usage = u.get_total_usage(starttime, endtime, mode)
+    else:
+        return HttpResponse(json.dumps({"errors" : form.errors}), content_type="application/json")
+    return HttpResponse(json.dumps(total_usage), content_type="application/json")
+
+@login_required
+def total_cost(request):
+    form = GetTotalsForm(request.GET)
+    if form.is_valid():
+        starttime = ec.get_epoch_time_s(form.cleaned_data['startdate'])
+        endtime = ec.get_epoch_time_s(form.cleaned_data['enddate'] + datetime.timedelta(days=1))
+        mode = form.cleaned_data['mode']
+        total_costs = cost.get_total_costs(starttime, endtime, mode)
     else:
         return HttpResponse(json.dumps({"errors" : form.errors}), content_type="application/json")
     return HttpResponse(json.dumps(total_costs), content_type="application/json")
