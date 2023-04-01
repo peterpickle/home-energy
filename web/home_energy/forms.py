@@ -44,5 +44,11 @@ class GetTotalsForm(forms.Form):
         startdate = cleaned_data.get("startdate")
         enddate  = cleaned_data.get("enddate")
 
+        if startdate is None:
+            raise ValidationError("Invalid startdate.")
+
+        if enddate is None:
+            raise ValidationError("Invalid enddate.")
+
         if (enddate < startdate):
             raise ValidationError("Startdate must be before enddate.")

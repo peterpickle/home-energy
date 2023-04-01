@@ -318,7 +318,7 @@ def get_total_usage(starttime, endtime, mode):
 
     #Get peak usage
     peak_down = 0
-    if mode != Mode.YEAR: #TODO: automatically detect based on period >= 1year == avg, else max. Keep flex period in mind e.g.: may 2021 to may 2022
+    if total_bucket_size <= (31 * 86400000):
         # Show the MAX peak
         # TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
         peak_down_result = rts.range("electricity_down_15min", starttime_ms, endtime_ms, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
@@ -328,20 +328,23 @@ def get_total_usage(starttime, endtime, mode):
         # Show the AVG peak of the MAX of the months
         # This requires getting the peak of each month
         peak_down_entries = []
-        start_day = get_datetime_from_epoch_in_s(starttime)
-        start_day = start_day.replace(day=1)
-        for i in range(1, 13):
-            month_start = start_day.replace(month=i)
+        current_day = get_datetime_from_epoch_in_s(starttime)
+        end_day = get_datetime_from_epoch_in_s(endtime)
+        print(f"end: {end_day}")
+        while current_day < end_day:
+            print(f"cur: {current_day}")
+            month_start = current_day.replace(day=1)
             month_nb_of_days = calendar.monthrange(month_start.year, month_start.month)[1]
             month_start_epoch = get_epoch_time_ms(month_start)
             month_end_epoch = get_epoch_end_time(month_start_epoch, month_nb_of_days)
             month_bucket_size = month_nb_of_days * 86400000
 
             peak_down_entries.extend(rts.range("electricity_down_15min", month_start_epoch, month_end_epoch, align='start', aggregation_type='max', bucket_size_msec=month_bucket_size))
+            current_day = month_start + datetime.timedelta(days=month_nb_of_days)
 
         nb_of_peak_entries = 0;
         for month_peak_entry in peak_down_entries:
-            peak_down += month_peak_entry[1]
+            peak_down += max(2.5, month_peak_entry[1])
             nb_of_peak_entries += 1
         if nb_of_peak_entries != 0:
             peak_down /= nb_of_peak_entries
