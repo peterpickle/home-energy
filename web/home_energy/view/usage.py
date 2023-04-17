@@ -178,13 +178,13 @@ def generate_result(day, mode,
     result["detailed_up_down"] = detailed_up_down
     return result
 
-def get_electricity_current_hour(rts, dir_str):
+def get_usage_current_hour(rts, timeseries_1h_name, timeseries_detail_name):
     # Get the latest value in the 1h series.
-    latest_1h = rts.get("electricity_" + dir_str + "_1h")
+    latest_1h = rts.get(timeseries_1h_name)
     if latest_1h is None:
         return 0
     # Use this time as a start time + 1h.
-    latest_hour_result = rts.range("electricity_" + dir_str + "_1min", latest_1h[0] + 3600000, latest_1h[0] + 7200000, align='start', aggregation_type='sum', bucket_size_msec=3600000)
+    latest_hour_result = rts.range(timeseries_detail_name, latest_1h[0] + 3600000, latest_1h[0] + 7200000, align='start', aggregation_type='sum', bucket_size_msec=3600000)
     if len(latest_hour_result):
         return latest_hour_result[0][1] / 60
     return 0
@@ -311,10 +311,10 @@ def get_total_usage(starttime, endtime, mode):
     if len(total_down_result):
         total_down = total_down_result[0][1]
     
-    if now >= starttime and now <= endtime:
+    if now >= starttime_ms and now <= endtime_ms:
         #add the last/current hour
-        total_up += get_electricity_current_hour(rts, "up")
-        total_down += get_electricity_current_hour(rts, "down")
+        total_up += get_usage_current_hour(rts, "electricity_up_1h", "electricity_up_1min")
+        total_down += get_usage_current_hour(rts, "electricity_down_1h", "electricity_down_1min")
 
     #Get peak usage
     peak_down = 0
@@ -362,7 +362,7 @@ def get_total_usage(starttime, endtime, mode):
             total_prod_result = rts.range("electricity_prod_gen_daily_1day", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
             if len(total_prod_result):
                 total_prod = total_prod_result[0][1]
-            if now >= starttime and now <= endtime:
+            if now >= starttime_ms and now <= endtime_ms:
                 #add the current day
                 now_start_day = now - (now % 86400000)
                 total_prod_result = rts.range("electricity_prod_gen_daily_1min", now_start_day, now_start_day + 86400000, align='start', aggregation_type='max', bucket_size_msec=86400000)
