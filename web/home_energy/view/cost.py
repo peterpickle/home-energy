@@ -33,6 +33,8 @@ def get_period_cost_current_day(unit_name, timeseries_name, price, price_startti
 def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price_endtime_ms, bucket_size, rts, timeseries_detail_name=None):
     period_cost = 0
     usage = 0
+    now = get_now_epoch_in_ms()
+
     unit_price = price.get(unit_name)
     if unit_price:
         unit_price = float(unit_price)
@@ -41,7 +43,7 @@ def get_period_cost(unit_name, timeseries_name, price, price_starttime_ms, price
         if len(usage_result):
             usage = usage_result[0][1]
 
-        if timeseries_detail_name:
+        if timeseries_detail_name and now >= price_starttime_ms and now <= price_endtime_ms:
             usage += u.get_usage_current_hour(rts, timeseries_name, timeseries_detail_name)
 
         period_cost = usage * unit_price
