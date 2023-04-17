@@ -123,6 +123,7 @@
             } else if (fieldName == ("State")) {
                 newValue = newValue.split(";");
                 newValue = newValue[newValue.length - 1];
+                newValue = newValue.replace("_", " ");
             } else if (fieldName == ("z1DayTemp")) {
                 newValue += " °C";
             } else if (fieldName == ("z1NightTemp")) {
