@@ -157,6 +157,7 @@ read_fields = [
     [VRC700_CIRCUIT_NAME, 'z1ActualRoomTempDesired', RETURN_TYPE.ANY, 0],
     [VRC700_CIRCUIT_NAME, 'DisplayedOutsideTemp', RETURN_TYPE.ANY, 300],
     [VRC700_CIRCUIT_NAME, 'OutsideTempAvg', RETURN_TYPE.ANY, 3600],
+    [VRC700_CIRCUIT_NAME, 'OpMode', RETURN_TYPE.ANY, 0],
     [VRC700_CIRCUIT_NAME, 'z1Timer.Monday', RETURN_TYPE.RANGE, 0],
     [VRC700_CIRCUIT_NAME, 'z1Timer.Tuesday', RETURN_TYPE.RANGE, 0],
     [VRC700_CIRCUIT_NAME, 'z1Timer.Wednesday', RETURN_TYPE.RANGE, 0],
@@ -171,6 +172,17 @@ read_fields = [
     [VRC700_CIRCUIT_NAME, 'Hc1HeatCurve', RETURN_TYPE.ANY, 300],
     [VRC700_CIRCUIT_NAME, 'PrEnergySumHcThisMonth', RETURN_TYPE.ANY, 3600],
     [VRC700_CIRCUIT_NAME, 'PrEnergySumHcLastMonth', RETURN_TYPE.ANY, 3600],
+
+    # Cooling Circuit
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTemp', RETURN_TYPE.ANY, 0],
+    [VRC700_CIRCUIT_NAME, 'OpModeCooling', RETURN_TYPE.ANY, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Monday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Tuesday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Wednesday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Thursday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Friday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Saturday', RETURN_TYPE.RANGE, 0],
+    [VRC700_CIRCUIT_NAME, 'z1CoolingTimer.Sunday', RETURN_TYPE.RANGE, 0],
 
     # Hot Water Circuit
     [VRC700_CIRCUIT_NAME, 'HwcTempDesired', RETURN_TYPE.ANY, 0],

@@ -67,6 +67,7 @@ option
     text-align: center;
 }
 #grid-item-heating-schedule,
+#grid-item-cooling-schedule,
 #grid-item-water-schedule
 {
     grid-column: 2 / span 2;
