@@ -318,7 +318,7 @@ def get_total_usage(starttime, endtime, mode):
 
     #Get peak usage
     peak_down = 0
-    if total_bucket_size <= (31 * 86400000):
+    if total_bucket_size <= ((31 * 86400000) + 3600000):
         # Show the MAX peak
         # TS.RANGE electricity_down_15min <startTime> <stopTime> ALIGN start AGGREGATION MAX 86400000
         peak_down_result = rts.range("electricity_down_15min", starttime_ms, endtime_ms, align='start', aggregation_type='max', bucket_size_msec=total_bucket_size)
