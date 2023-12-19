@@ -300,7 +300,7 @@
             displayDateStr = detailedDate.toLocaleString('en', { month: 'long', year: 'numeric'});
         } else if (mode == ModeEnum.YEAR) {
             displayDateStr = detailedDate.toLocaleString('en', { year: 'numeric'});
-        } else if (mode == ModeEnum.YEAR) {
+        } else if (mode == ModeEnum.ALL) {
             displayDateStr = "All Years"
         }
         $("#day_date_div").html(displayDateStr);
@@ -477,6 +477,20 @@
         }
     }
 
+    function enableDisableNextPrevButtons(enable) {
+        if (enable) {
+            $("#controls_prev_1_div").removeClass("disabled");
+            $("#controls_next_1_div").removeClass("disabled");
+            $("#controls_prev_2_div").removeClass("disabled");
+            $("#controls_next_2_div").removeClass("disabled");
+        } else {
+            $("#controls_prev_1_div").addClass("disabled");
+            $("#controls_next_1_div").addClass("disabled");
+            $("#controls_prev_2_div").addClass("disabled");
+            $("#controls_next_2_div").addClass("disabled");
+        }
+    }
+
     //controls
     window.onload = function() {
         if (FEATURE_PRODUCTION == 0) {
@@ -527,6 +541,8 @@
                     $("#mode_month_div").removeClass("active");
                     $("#mode_year_div").removeClass("active");
                     $("#mode_all_div").addClass("active");
+
+                    enableDisableNextPrevButtons(false);
                 }
             }
         );
@@ -540,6 +556,8 @@
                     $("#mode_month_div").removeClass("active");
                     $("#mode_year_div").addClass("active");
                     $("#mode_all_div").removeClass("active");
+
+                    enableDisableNextPrevButtons(true);
                 }
             }
         );
@@ -553,6 +571,8 @@
                     $("#mode_month_div").addClass("active");
                     $("#mode_year_div").removeClass("active");
                     $("#mode_all_div").removeClass("active");
+
+                    enableDisableNextPrevButtons(true);
                 }
             }
         );
@@ -566,6 +586,8 @@
                     $("#mode_month_div").removeClass("active");
                     $("#mode_year_div").removeClass("active");
                     $("#mode_all_div").removeClass("active");
+
+                    enableDisableNextPrevButtons(true);
                 }
             }
         );
