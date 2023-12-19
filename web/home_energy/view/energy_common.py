@@ -4,6 +4,14 @@ import datetime
 import redis
 import time
 
+from enum import Enum
+
+class Mode(Enum):
+    DAY = 1
+    MONTH = 2
+    YEAR = 3
+    ALL = 4
+
 def db_connect():
     #connect to the DB
     r = redis.Redis(host='localhost',
@@ -20,6 +28,9 @@ def parse_day(day_str):
 
 def get_datetime_from_epoch_in_s(epoch_in_s):
     return datetime.datetime.fromtimestamp(epoch_in_s)
+
+def get_datetime_from_epoch_in_ms(epoch_in_ms):
+    return datetime.datetime.fromtimestamp(epoch_in_ms / 1000)
 
 def format_epoch(epoch_in_ms, format_str):
     return epoch_in_ms.strftime(format_str)

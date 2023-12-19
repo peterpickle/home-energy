@@ -13,7 +13,6 @@ FEATURE_GAS = settings.FEATURE_GAS
 FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 FEATURE_SOLAR_CONSUMPTION = settings.FEATURE_SOLAR_CONSUMPTION
 
-
 def get_period_cost_current_day(unit_name, timeseries_name, price, price_starttime_ms, price_endtime_ms, bucket_size, rts, timeseries_detail_name=None):
     period_cost = 0
     now = get_now_epoch_in_ms()
@@ -82,6 +81,18 @@ def get_total_costs(starttime, endtime, mode):
     r = db_connect()
     rts = db_timeseries_connect(r)
 
+    mode = Mode(mode)
+
+    if mode == Mode.ALL:
+        #Get the first and last timestamp from the DB
+        down_info = rts.info("electricity_down_1h")
+        if down_info is None:
+            starttime = get_now_epoch_in_s()
+            endtime = starttime + 1
+        else:
+            starttime = int(down_info.first_timestamp / 1000)
+            endtime = int(down_info.last_timestamp / 1000)
+
     total_cost_down_high = 0
     total_cost_up_high = 0
     total_cost_gas = 0
@@ -111,6 +122,7 @@ def get_total_costs(starttime, endtime, mode):
 if __name__ == '__main__':
     #file executed as script
 
-    result  = get_total_cost(1672527600, 1680299999) #1 jan 2023 - 31 mar 2023 23:59:59
+    #result  = get_total_costs(1672527600, 1680299999, Mode.YEAR) #1 jan 2023 - 31 mar 2023 23:59:59
+    result  = get_total_costs(0, 0, Mode.ALL)
 
     print(result)

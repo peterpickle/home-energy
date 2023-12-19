@@ -2,7 +2,6 @@
 
 import datetime
 import calendar
-from enum import Enum
 import redis
 import sys
 
@@ -10,11 +9,12 @@ from django.conf import settings
 from home_energy.view.energy_common import *
 
 if not settings.configured:
-    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_FORECAST=1)
+    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_FORECAST=1, FEATURE_SOLAR_CONSUMPTION=1)
 
 FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 FEATURE_GAS = settings.FEATURE_GAS
 FEATURE_SOLAR_FORECAST = settings.FEATURE_SOLAR_FORECAST
+FEATURE_SOLAR_CONSUMPTION = settings.FEATURE_SOLAR_CONSUMPTION
 
 #The buckset size should be a number that could used to divide 15 minutes
 day_bucket_size_msec = 3 * 60 * 1000
@@ -23,11 +23,6 @@ if FEATURE_GAS:
 
 r = db_connect()
 rts = db_timeseries_connect(r)
-
-class Mode(Enum):
-    DAY = 1
-    MONTH = 2
-    YEAR = 3
 
 def get_default_day():
     return datetime.date.today()
@@ -204,13 +199,22 @@ def get_detailed_usage(date_str, mode_str):
         start_day = day.replace(day=1)
         start_day = start_day.replace(month=1)
         days = 366 if calendar.isleap(day.year) else 365
+    elif mode == Mode.ALL:
+        down_info = rts.info("electricity_down_1h")
+        if down_info is None:
+            start_day = day.replace(day=1)
+            start_day = start_day.replace(month=1)
+            days = 366 if calendar.isleap(day.year) else 365
+        else:
+            start_day = datetime.datetime(get_datetime_from_epoch_in_ms(down_info.first_timestamp).year, 1, 1)
+            end_day = datetime.datetime(get_datetime_from_epoch_in_ms(down_info.last_timestamp).year, 12, 31)
+            days = (end_day - start_day).days + 1
     else:
         raise ValueError("Invalid mode")
 
     now = get_now_epoch_in_ms()
     start_time = get_epoch_time_ms(start_day)
     end_time = get_epoch_end_time(start_time, days)
-    total_bucket_size = days * 86400000
 
     prod_entries = []
     gas_entries = []
@@ -278,6 +282,29 @@ def get_detailed_usage(date_str, mode_str):
                             #2. use the result
                             prod_result = [(month_start_epoch, today_prod_result[0][1])]
                 prod_entries.extend(prod_result)
+    elif mode == Mode.ALL:
+        up_entries = []
+        down_entries = []
+        peak_down_entries = []
+
+        start_datetime = get_datetime_from_epoch_in_ms(start_time)
+        end_datetime = get_datetime_from_epoch_in_ms(end_time)
+
+        for year in range(start_datetime.year, end_datetime.year + 1):
+            year_start = datetime.datetime(year, 1, 1)
+            year_end = datetime.datetime(year, 12, 31, 23, 59, 59)
+            year_total = get_total_usage(get_epoch_time_s(year_start), get_epoch_time_s(year_end), Mode.YEAR)
+            up_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_up"])])
+            down_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_down"])])
+            peak_down_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_peak_down"])])
+
+            if FEATURE_GAS:
+                gas_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_gas"])])
+            if FEATURE_PRODUCTION:
+                prod_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_prod"])])
+            #Don't retrun solar forecast data for mode all
+            #if FEATURE_SOLAR_FORECAST:
+            #    solar_forecast_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_solar_forecast"])])
 
     #Add missing data at end
     up_entries = add_missing_data(up_entries, mode, 0.0)
@@ -291,13 +318,24 @@ def get_detailed_usage(date_str, mode_str):
                              up_entries, down_entries, peak_down_entries, prod_entries, gas_entries, solar_forecast_entries)
     return result
 
-def get_total_usage(starttime, endtime, mode):
+def get_total_usage(starttime_in_s, endtime_in_s, mode):
     total_usage = {}
 
     mode = Mode(mode)
+
+    if mode == Mode.ALL:
+        #Get the first and last timestamp from the DB
+        down_info = rts.info("electricity_down_1h")
+        if down_info is None:
+            starttime_in_s = get_now_epoch_in_s()
+            endtime_in_s = starttime_in_s + 1
+        else:
+            starttime_in_s = int(down_info.first_timestamp / 1000)
+            endtime_in_s = int(down_info.last_timestamp / 1000)
+
     now = get_now_epoch_in_ms()
-    starttime_ms = starttime * 1000
-    endtime_ms = endtime * 1000
+    starttime_ms = starttime_in_s * 1000
+    endtime_ms = endtime_in_s * 1000
     total_bucket_size = endtime_ms - starttime_ms
 
     #Get total usage
@@ -328,11 +366,11 @@ def get_total_usage(starttime, endtime, mode):
         # Show the AVG peak of the MAX of the months
         # This requires getting the peak of each month
         peak_down_entries = []
-        current_day = get_datetime_from_epoch_in_s(starttime)
-        end_day = get_datetime_from_epoch_in_s(endtime)
-        print(f"end: {end_day}")
+        current_day = get_datetime_from_epoch_in_s(starttime_in_s)
+        end_day = get_datetime_from_epoch_in_s(endtime_in_s)
+        #print(f"end: {end_day}")
         while current_day < end_day:
-            print(f"cur: {current_day}")
+            #print(f"cur: {current_day}")
             month_start = current_day.replace(day=1)
             month_nb_of_days = calendar.monthrange(month_start.year, month_start.month)[1]
             month_start_epoch = get_epoch_time_ms(month_start)
@@ -358,7 +396,7 @@ def get_total_usage(starttime, endtime, mode):
             total_prod_result = get_entries(total_prod_result, 'value', 'dayGen')
             if total_prod_result:
                 total_prod =  total_prod_result[0][1]
-        elif mode == Mode.MONTH or mode == Mode.YEAR:
+        elif mode == Mode.MONTH or mode == Mode.YEAR or mode == Mode.ALL:
             total_prod_result = rts.range("electricity_prod_gen_daily_1day", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
             if len(total_prod_result):
                 total_prod = total_prod_result[0][1]
@@ -453,6 +491,7 @@ if __name__ == '__main__':
     #get input params
     day_str = get_script_arg_day()
     mode_str = get_script_arg_mode()
-    result = get_detailed_usage(day_str, mode_str)
+    #result = get_detailed_usage(day_str, mode_str)
+    result = get_total_usage(0, 0, 4)
     print(result)
 

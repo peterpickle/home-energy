@@ -14,7 +14,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
-    const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3 };
+    const ModeEnum = { "DAY":1, "MONTH":2, "YEAR":3, "ALL":4, };
     const DisplayModeEnum = { "USAGE":1, "COST":2 };
     Object.freeze(ModeEnum);
 
@@ -195,7 +195,7 @@
         }
 
         //adjust the labels
-        if (mode == ModeEnum.YEAR) {
+        if (mode == ModeEnum.YEAR || mode == ModeEnum.ALL) {
             $("#data_field_peak_down_label_div").html("PEAK (avg)");
         } else {
             $("#data_field_peak_down_label_div").html("PEAK (max)");
@@ -278,6 +278,8 @@
                 dateFormatPattern = "MMM dd"
             } else if (mode == ModeEnum.YEAR) {
                 dateFormatPattern = "MMM"
+            } else if (mode == ModeEnum.ALL) {
+                dateFormatPattern = "YYYY"
             }
             dateFormatter = new google.visualization.DateFormat({
                 pattern: dateFormatPattern
@@ -298,6 +300,8 @@
             displayDateStr = detailedDate.toLocaleString('en', { month: 'long', year: 'numeric'});
         } else if (mode == ModeEnum.YEAR) {
             displayDateStr = detailedDate.toLocaleString('en', { year: 'numeric'});
+        } else if (mode == ModeEnum.YEAR) {
+            displayDateStr = "All Years"
         }
         $("#day_date_div").html(displayDateStr);
     }
@@ -329,6 +333,9 @@
             } else {
                 days = 365;
             }
+        } else if (mode == ModeEnum.ALL) {
+            startDate = new Date();
+            days = 1;
         }
         endDate = startDate.addDays(days - 1);
 
@@ -510,15 +517,29 @@
            }
         }
 
+        $("#mode_all_div").click(
+            function() {
+                if (mode != ModeEnum.ALL) {
+                    mode = ModeEnum.ALL;
+                    queryAllDataAndDisplay(detailedDate);
+
+                    $("#mode_day_div").removeClass("active");
+                    $("#mode_month_div").removeClass("active");
+                    $("#mode_year_div").removeClass("active");
+                    $("#mode_all_div").addClass("active");
+                }
+            }
+        );
         $("#mode_year_div").click(
             function() {
                 if (mode != ModeEnum.YEAR) {
-                    mode = ModeEnum.YEAR;
+                    mode = ModeEnum.YEAR;                    
                     queryAllDataAndDisplay(detailedDate);
 
                     $("#mode_day_div").removeClass("active");
                     $("#mode_month_div").removeClass("active");
                     $("#mode_year_div").addClass("active");
+                    $("#mode_all_div").removeClass("active");
                 }
             }
         );
@@ -531,6 +552,7 @@
                     $("#mode_day_div").removeClass("active");
                     $("#mode_month_div").addClass("active");
                     $("#mode_year_div").removeClass("active");
+                    $("#mode_all_div").removeClass("active");
                 }
             }
         );
@@ -543,6 +565,7 @@
                     $("#mode_day_div").addClass("active");
                     $("#mode_month_div").removeClass("active");
                     $("#mode_year_div").removeClass("active");
+                    $("#mode_all_div").removeClass("active");
                 }
             }
         );
@@ -1076,6 +1099,44 @@
                         isStacked: true,
                         legend: 'none'}
 
+        var allOptions = { 
+                        height: 600,
+                        chartArea: {width: '85%', height: '85%'},
+                        backgroundColor: 'transparent',
+                        colors: chartColors,
+                        seriesType: 'bars',
+                        vAxis: { 
+                            textStyle: { 
+                                color: '#f4f4f9' 
+                            },
+                            gridlines: {  
+                                multiple: 1,
+                                color: '#6e6e6e',
+                            }, 
+                            minorGridlines: { 
+                                count: 0,
+                            },
+                        },
+                        hAxis: {
+                            textStyle: { 
+                                color: '#f4f4f9' 
+                            },
+                            gridlines: { 
+                                color: 'transparent',
+                            },
+                            minorGridlines: { 
+                                count: 0,
+                            },
+                            format: 'YYYY'
+                        },
+                        animation: {
+                            startup: true,
+                            duration: 500
+                            //easing: 'out'
+                        },
+                        isStacked: true,
+                        legend: 'none'}
+
         chartDiv = document.getElementById('chart_div');
 
         if (!chartCreated) {
@@ -1089,6 +1150,8 @@
             options = monthOptions;
         } else if (mode == ModeEnum.YEAR) {
             options = yearOptions;
+        } else if (mode == ModeEnum.ALL) {
+            options = allOptions;
         }
        
         chart.draw(data, options);
@@ -1105,6 +1168,7 @@
     <div id="chart_div" class="chart">
     </div>
     <div id="mode_div" class="mode btn-group" role="group">
+        <button type="button" id="mode_all_div" class="btn btn-dark mode_button">All</button>
         <button type="button" id="mode_year_div" class="btn btn-dark mode_button">Year</button>
         <button type="button" id="mode_month_div" class="btn btn-dark mode_button">Month</button>
         <button type="button" id="mode_day_div" class="btn btn-dark mode_button active">Day</button>

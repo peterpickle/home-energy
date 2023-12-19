@@ -37,7 +37,7 @@ class RemovePriceForm(forms.Form):
 class GetTotalsForm(forms.Form):
     startdate = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
     enddate   = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
-    mode      = forms.IntegerField(required=True, min_value=1, max_value=3)
+    mode      = forms.IntegerField(required=True, min_value=1, max_value=4)
 
     def clean(self):
         cleaned_data = super().clean()
