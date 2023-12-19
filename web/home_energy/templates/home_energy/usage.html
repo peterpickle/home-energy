@@ -533,7 +533,7 @@
         $("#mode_year_div").click(
             function() {
                 if (mode != ModeEnum.YEAR) {
-                    mode = ModeEnum.YEAR;                    
+                    mode = ModeEnum.YEAR;
                     queryAllDataAndDisplay(detailedDate);
 
                     $("#mode_day_div").removeClass("active");
@@ -1099,32 +1099,32 @@
                         isStacked: true,
                         legend: 'none'}
 
-        var allOptions = { 
+        var allOptions = {
                         height: 600,
                         chartArea: {width: '85%', height: '85%'},
                         backgroundColor: 'transparent',
                         colors: chartColors,
                         seriesType: 'bars',
-                        vAxis: { 
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                        vAxis: {
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: {  
+                            gridlines: { 
                                 multiple: 1,
                                 color: '#6e6e6e',
-                            }, 
-                            minorGridlines: { 
+                            },
+                            minorGridlines: {
                                 count: 0,
                             },
                         },
                         hAxis: {
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: { 
+                            gridlines: {
                                 color: 'transparent',
                             },
-                            minorGridlines: { 
+                            minorGridlines: {
                                 count: 0,
                             },
                             format: 'YYYY'
