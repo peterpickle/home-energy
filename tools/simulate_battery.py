@@ -10,7 +10,6 @@ import datetime
 import calendar
 from enum import Enum
 import redis
-import redistimeseries.client
 import sys
 import time
 
@@ -72,7 +71,7 @@ def simulate(start_day_str, end_day_str, capacity_str):
     r = redis.Redis(host='localhost',
                     port=6379,
                     password=None)
-    rts = redistimeseries.client.Client(r)
+    rts = r.ts()
 
     down_entries = rts.range("electricity_down_1min", start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=bucket_size_ms)
     up_entries = rts.range("electricity_up_1min", start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=bucket_size_ms)
