@@ -2,8 +2,8 @@
 
 '''
 usage:
-python simulate_battery.py YYYY-MM-DD YYYY-MM-DD <battery capacity in kWh>
-python simulate_battery.py 2022-01-01 2022-12-31 5.0
+python simulate_battery.py YYYY-MM-DD YYYY-MM-DD <battery capacity in kWh> <max charging power kW> <max discharging power kW>
+python simulate_battery.py 2022-01-01 2022-12-31 5.0 1.6 0.8
 '''
 
 import datetime
@@ -32,6 +32,18 @@ def get_script_arg_capacity():
         return sys.argv[3]
     return ''
 
+def get_script_arg_max_charging_power():
+    if len(sys.argv) >= 5:
+        #return the third argument
+        return sys.argv[4]
+    return ''
+
+def get_script_arg_max_discharging_power():
+    if len(sys.argv) >= 6:
+        #return the third argument
+        return sys.argv[5]
+    return ''
+
 def parse_day(day_str):
     return datetime.datetime.strptime(day_str, '%Y-%m-%d')
 
@@ -51,12 +63,12 @@ def get_epoch_time_ms(date):
 def get_epoch_end_time(start_epoch_time, days):
     return start_epoch_time + (days * 86400000) - 1
 
-
-
-def simulate(start_day_str, end_day_str, capacity_str):
+def simulate(start_day_str, end_day_str, capacity_str, max_charging_power_str, max_discharging_power_str):
     start_day = parse_day(start_day_str)
     end_day = parse_day(end_day_str)
     capacity = float(capacity_str)
+    max_charging_power = float(max_charging_power_str)
+    max_discharging_power = float(max_discharging_power_str)
 
     #calculate the range to get data from
     days = (end_day - start_day).days
@@ -66,6 +78,8 @@ def simulate(start_day_str, end_day_str, capacity_str):
     bucket_size_s = 1 * 60
     bucket_size_ms = bucket_size_s * 1000
     buckets_per_hour = 3600 / bucket_size_s
+    max_charging_power_per_bucket = max_charging_power / buckets_per_hour
+    max_discharging_power_per_bucket = max_charging_power / buckets_per_hour
 
     #connect to the DB
     r = redis.Redis(host='localhost',
@@ -96,6 +110,7 @@ def simulate(start_day_str, end_day_str, capacity_str):
     current_charge = 0
     charged = 0
     discharged = 0
+    nbOfCycles = 0
 
     for i, up_entry in enumerate(up_entries):
         down_entry = down_entries[i]
@@ -118,6 +133,9 @@ def simulate(start_day_str, end_day_str, capacity_str):
             #p = prod_entry[1]
 
             if current_charge != 0:
+                if d > max_discharging_power_per_bucket:
+                    d = max_discharging_power_per_bucket
+                
                 if d > current_charge:
                     discharged += current_charge
                     current_charge = 0
@@ -126,23 +144,29 @@ def simulate(start_day_str, end_day_str, capacity_str):
                     current_charge -= d
 
             if u > 0:
+                if u > max_charging_power_per_bucket:
+                    u = max_charging_power_per_bucket
+                
                 if current_charge + u > capacity:
                     charged += capacity - current_charge
                     current_charge = capacity
                 else:
                     charged += u
                     current_charge += u
-
         else:
             print('Keys don\'t match for up and down entries. i ' + str(i) + ', up_key ' + str(up_entry[0]) + ', down_key ' + str(down_entry[0]))
 
+    nbOfCycles = discharged / capacity
 
-    return (nbOfDetailedEntries, charged, discharged)
+
+    return (nbOfDetailedEntries, charged, discharged, nbOfCycles)
 
 if __name__ == '__main__':
     #file executed as script
     start_day_str = get_script_arg_start_day()
     end_day_str = get_script_arg_end_day()
     capacity_str = get_script_arg_capacity()
-    result = simulate(start_day_str, end_day_str, capacity_str)
+    max_charging_power_str = get_script_arg_max_charging_power()
+    max_discharging_power_str = get_script_arg_max_discharging_power()
+    result = simulate(start_day_str, end_day_str, capacity_str, max_charging_power_str, max_discharging_power_str)
     print(result)
