@@ -79,14 +79,6 @@ TS.CREATE gas_15min LABELS type gas granularity 15m
 TS.CREATERULE gas_5min gas_15min AGGREGATION sum 900000
 ```
 
-Solar forecast
-
-Per hour, keep forever
-
-```
-TS.CREATE solar_forecast_1h DUPLICATE_POLICY LAST LABELS type solar_forecast granularity 1h
-```
-
 Disable the expiry of 1 minute data (optional)
 ```
 TS.ALTER electricity_down_1min RETENTION 0

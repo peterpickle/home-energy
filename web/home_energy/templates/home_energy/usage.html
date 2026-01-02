@@ -22,7 +22,6 @@
     var FEATURE_GAS = {{ FEATURE_GAS }};
     var FEATURE_PRODUCTION = {{ FEATURE_PRODUCTION }};
     var FEATURE_SOLAR_CONSUMPTION = {{ FEATURE_SOLAR_CONSUMPTION }};
-    var FEATURE_SOLAR_FORECAST = {{ FEATURE_SOLAR_FORECAST }};
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
@@ -45,7 +44,6 @@
     var chartShowPeakDown = false;
     var chartShowGas = false;
     var chartShowSolarCons = false;
-    var chartShowSolarForecast = true;
 
     var chartPrevShowUp;
     var chartPrevShowDown;
@@ -54,7 +52,6 @@
     var chartPrevShowPeakDown;
     var chartPrevShowGas;
     var chartPrevShowSolarCons;
-    var chartPrevShowSolarForecast;
 
     Date.prototype.addDays = function (days) {
         const date = new Date(this.valueOf());
@@ -163,10 +160,6 @@
                 total_usage_solar_cons = result.total_usage_prod - result.total_usage_up;
                 $("#data_field_total_solar_cons_div").html(get_fixed_digits(total_usage_solar_cons));
             }
-            if (FEATURE_SOLAR_FORECAST)
-            {
-                $("#data_field_total_solar_forecast_div").html(get_fixed_digits(result.total_usage_solar_forecast));
-            }
         } else if (displayMode == DisplayModeEnum.COST) {
             $("#data_field_total_up_div").html(get_fixed_digits(result.total_cost_up_high));
             $("#data_field_total_down_div").html(get_fixed_digits(result.total_cost_down_high));
@@ -188,10 +181,6 @@
             {
                 $("#data_field_total_solar_cons_div").html(get_fixed_digits(result.total_cost_solar_consumption));
             }
-            if (FEATURE_SOLAR_FORECAST)
-            {
-                $("#data_field_total_solar_forecast_div").html("-");
-            }
         }
 
         //adjust the labels
@@ -210,7 +199,6 @@
             c = null;
             g = null;
             sc = null;
-            sf = null;
 
             chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
             chartData.addColumn('number', 'Down');
@@ -220,7 +208,6 @@
             chartData.addColumn('number', 'Consumption');
             chartData.addColumn('number', 'Gas');
             chartData.addColumn('number', 'Solar Consumption');
-            chartData.addColumn('number', 'Solar Forecast');
 
             $.each(result.detailed_up_down, function(i, entry) {
                 timestamp = new Date(entry.t);
@@ -252,13 +239,6 @@
                         sc = null;
                     }
                 }
-                if (FEATURE_SOLAR_FORECAST) {
-                    if (entry.sf) {
-                        sf = -entry.sf;
-                    } else {
-                        sf = null;
-                    }
-                }
                 chartData.addRow([timestamp,
                                   entry.d,
                                   (entry.u == 0) ? null : -entry.u,
@@ -266,8 +246,7 @@
                                   entry.pd,
                                   c,
                                   g,
-                                  sc,
-                                  sf]);
+                                  sc]);
             });
 
             //How dates are displayed in the tooltips
@@ -423,13 +402,6 @@
                 chartDisplayData.setValue(rId, cId, null);
             }
         }
-        if (!chartShowSolarForecast) {
-            cId = chartDisplayData.getColumnIndex('Solar Forecast');
-            nbOfRows = chartDisplayData.getNumberOfRows();
-            for (rId = 0;rId < nbOfRows; rId++) {
-                chartDisplayData.setValue(rId, cId, null);
-            }
-        }
 
         if (chartShowUp && chartShowProd) {
             //set the production to the self usage, not the full production
@@ -514,9 +486,6 @@
         }
         if (FEATURE_SOLAR_CONSUMPTION) {
             data_fields.push({id:"data_field_total_solar_cons_div", label:"SOLAR CONSUMPTION"});
-        }
-        if (FEATURE_SOLAR_FORECAST) {
-            data_fields.push({id:"data_field_total_solar_forecast_div", label:"SOLAR FORECAST"});
         }
 
         var data_fields_table = document.getElementById("data_fields_table");
@@ -653,7 +622,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable peak data
                         chartShowPeakDown = false;
@@ -662,7 +630,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable consumption data
                         chartShowCons = false;
@@ -671,7 +638,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable gas data
                         chartShowGas = false;
@@ -680,7 +646,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable solar consumption data
                         chartShowSolarCons = false;
@@ -699,7 +664,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowSolarForecast = chartPrevShowSolarForecast;
 
                     //disable peak data
                     chartShowPeakDown = false;
@@ -708,7 +672,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowSolarForecast = chartPrevShowSolarForecast;
 
                     //disable consumption data
                     chartShowCons = false;
@@ -717,7 +680,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowSolarForecast = chartPrevShowSolarForecast;
 
                     //disable gas data
                     chartShowGas = false;
@@ -726,7 +688,6 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
-                    chartShowSolarForecast = chartPrevShowSolarForecast;
 
                     //disable solar consumption data
                     chartShowSolarCons = false;
@@ -745,7 +706,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable peak data
                         chartShowPeakDown = false;
@@ -754,7 +714,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable consumption data
                         chartShowCons = false;
@@ -763,7 +722,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable gas data
                         chartShowGas = false;
@@ -772,7 +730,6 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
 
                         //disable solar consumption data
                         chartShowSolarCons = false;
@@ -794,7 +751,6 @@
                     chartShowCons = chartPrevShowCons;
                     chartShowGas = chartPrevShowGas;
                     chartShowSolarCons = chartPrevShowSolarCons;
-                    chartShowSolarForecast = chartPrevShowSolarForecast;
                 } else if (chartShowCons) {
                     chartShowCons = false;
                 } else if (chartShowGas) {
@@ -809,7 +765,6 @@
                     chartPrevShowCons = chartShowCons;
                     chartPrevShowGas = chartShowGas;
                     chartPrevShowSolarCons = chartShowSolarCons;
-                    chartPrevShowSolarForecast = chartShowSolarForecast;
 
                     //disable other data
                     chartShowUp = false;
@@ -818,7 +773,6 @@
                     chartShowCons = false;
                     chartShowGas = false;
                     chartShowSolarCons = false;
-                    chartShowSolarForecast = false;
                 }
                 chartShowPeakDown = !chartShowPeakDown;
                 showHideChartColumns();
@@ -836,7 +790,6 @@
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowGas = chartPrevShowGas;
                         chartShowSolarCons = chartPrevShowSolarCons;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
                     } else if (chartShowPeakDown) {
                         chartShowPeakDown = false;
                     } else if (chartShowGas) {
@@ -851,7 +804,6 @@
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowGas = chartShowGas;
                         chartPrevShowSolarCons = chartShowSolarCons;
-                        chartPrevShowSolarForecast = chartShowSolarForecast;
 
                         //disable other data
                         chartShowUp = false;
@@ -860,7 +812,6 @@
                         chartShowPeakDown = false;
                         chartShowGas = false;
                         chartShowSolarCons = false;
-                        chartShowSolarForecast = false;
                     }
                     chartShowCons = !chartShowCons;
                     showHideChartColumns();
@@ -879,7 +830,6 @@
                         chartShowCons = chartPrevShowCons;
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowSolarCons = chartPrevShowSolarCons;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
                     } else if (chartShowPeakDown) {
                         chartShowPeakDown = false;
                     } else if (chartShowCons) {
@@ -894,7 +844,6 @@
                         chartPrevShowCons = chartShowCons;
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowSolarCons = chartShowSolarCons;
-                        chartPrevShowSolarForecast = chartShowSolarForecast;
 
                         //disable other data
                         chartShowUp = false;
@@ -903,7 +852,6 @@
                         chartShowCons = false;
                         chartShowPeakDown = false;
                         chartShowSolarCons = false;
-                        chartShowSolarForecast = false;
                     }
                     chartShowGas = !chartShowGas;
                     showHideChartColumns();
@@ -922,7 +870,6 @@
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowGas = chartPrevShowGas;
                         chartShowCons = chartPrevShowCons;
-                        chartShowSolarForecast = chartPrevShowSolarForecast;
                     } else if (chartShowPeakDown) {
                         chartShowPeakDown = false;
                     } else if (chartShowGas) {
@@ -937,7 +884,6 @@
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowGas = chartShowGas;
                         chartPrevShowCons = chartShowCons;
-                        chartPrevShowSolarForecast = chartShowSolarForecast;
 
                         //disable other data
                         chartShowUp = false;
@@ -946,20 +892,8 @@
                         chartShowPeakDown = false;
                         chartShowGas = false;
                         chartShowCons = false;
-                        chartShowSolarForecast = false;
                     }
                     chartShowSolarCons = !chartShowSolarCons;
-                    showHideChartColumns();
-                    drawChart(mode, chartDisplayData);
-                }
-            }
-        );
-        $("#data_field_total_solar_forecast_div").click(
-            function() {
-                if (FEATURE_SOLAR_FORECAST) {
-                    if (chartShowUp || chartShowDown || chartShowProd) {
-                        chartShowSolarForecast = !chartShowSolarForecast;
-                    }
                     showHideChartColumns();
                     drawChart(mode, chartDisplayData);
                 }
