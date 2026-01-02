@@ -102,9 +102,7 @@ This will create a file dump.rdb. This is your database. If you remove it, your 
 
 3. optionally: start production reader
 
-4. optionally: start solar forecast reader
-
-5. start the GUI
+4. start the GUI
    - deploy the directory 'web' with django (See "First Deploy" section below)
 
 ## First deploy with Django and Apache
