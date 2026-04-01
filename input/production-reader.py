@@ -6,6 +6,7 @@ from enum import Enum
 import InverterMsg
 import logging
 import os
+import paho.mqtt.client as mqtt
 import re
 import redis
 import socket
@@ -117,7 +118,7 @@ class Database:
         dayProd = invMsg.getGenerationToday()
 
         #logger.debug(f'time:{timeKey} currentProd:{currentProd} dayProd:{dayProd}')
-        
+
         #redis time series
         self.rts.add("electricity_prod_1min", timeKey, currentProd)
         self.rts.add("electricity_prod_gen_daily_1min", timeKey, dayProd)
@@ -138,6 +139,15 @@ listener.open()
 
 db = Database()
 db.connect()
+
+def on_mqtt_connect(client, userdata, flags, rc):
+    logger.info('pvmeter MQTT connected')
+    mqtt_client.publish('pvmeter/status', 'online', 0, True)
+
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_mqtt_connect
+mqtt_client.connect('127.0.0.1', 1883, 150)
+mqtt_client.loop_start()
 
 '''
 Loop for terminal
@@ -177,7 +187,7 @@ while True:
             continue
 
         invMsg = InverterMsg.InverterMsg(data[offset:])
-        
+
         if invMsg.getLoggerSerialNumber() != LOGGER_SERIAL:
             logger.error(f'Received message with unexpected logger serial. offset:{offset} length:{len(data)} data:"{data}"')
             continue
@@ -188,6 +198,9 @@ while True:
 
         invMsg.printData(logger)
         db.save_inverter_msg(invMsg)
+
+        mqtt_client.publish('pvmeter/power', invMsg.getTotalActivePowerAC(),  0, True)  # W
+        mqtt_client.publish('pvmeter/energy/total', invMsg.getGenerationTotal(),  0, True)  # kWh
 
         if offset != 0:
             logger.debug(f'Discarding data. length:{offset} data:"{data[:offset]}"')
