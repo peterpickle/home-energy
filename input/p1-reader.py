@@ -6,6 +6,7 @@ from enum import Enum
 import configparser
 import logging
 import os
+import paho.mqtt.client as mqtt
 import re
 import redis
 import sys
@@ -456,6 +457,15 @@ reader.open()
 db = Database()
 db.connect()
 
+def on_mqtt_connect(client, userdata, flags, rc):
+    logger.info('p1meter MQTT connected')
+    mqtt_client.publish('p1meter/status', 'online', 0, True)
+
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_mqtt_connect
+mqtt_client.connect('127.0.0.1', 1883, 60)
+mqtt_client.loop_start()
+
 '''
 Loop for terminal
 '''
@@ -468,6 +478,11 @@ while True:
         telegram.parse_input()
         telegram.print_data()
         db.save_telegram(telegram)
+        mqtt_client.publish('p1meter/power/net',    (telegram.get_value(ObisTag.ALL_PHASES_CONSUMPTION)[0] - telegram.get_value(ObisTag.ALL_PHASES_PRODUCTION)[0]) * 1000,  0, True)  # W signed
+        mqtt_client.publish('p1meter/energy/total', (telegram.get_value(ObisTag.TOTAL_CONSUMPTION_DAY)[0] + telegram.get_value(ObisTag.TOTAL_CONSUMPTION_NIGHT)[0]),  0, True)  # kWh
+        mqtt_client.publish('p1meter/current/l1',    telegram.get_value(ObisTag.L1_CURRENT)[0],             0, True)  # A
+        mqtt_client.publish('p1meter/current/l2',    0,             0, True)
+        mqtt_client.publish('p1meter/current/l3',    0,             0, True)
     except Exception as e:
         logger.error(f'Unknown error. exception:"{e}"')
         telegram.log_input()
