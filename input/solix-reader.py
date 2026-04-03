@@ -52,18 +52,18 @@ def on_mqtt_message(client, userdata, msg):
         #print(json.dumps(payload, indent=2))  # Pretty-print the JSON
         # SOC: State of Charge (%)
         soc = round(float(payload['solarbank_info']['total_battery_power']) * 100, 1)
-        # power (W) positive for charging, negative for discharging
-        power = int(float(payload['solarbank_info']['total_charging_power']) - float(payload['solarbank_info']['battery_discharge_power']))
+        # power (kW) positive for charging, negative for discharging
+        power = (float(payload['solarbank_info']['total_charging_power']) - float(payload['solarbank_info']['battery_discharge_power']))/1000
         timeKey = int(time.time()) * 1000
         #logger.info(f"time {timeKey} soc {soc}%, power {power}W")
         if power >=0:
-            logger.info(f"charge: {power}W")
+            logger.info(f"charge: {power}kW")
             rts.madd([
                       ("battery_charge_sec", timeKey, float(power)),
                       ("battery_discharge_sec", timeKey, 0.0)
                      ])
         else:
-            logger.info(f"discharge: {-power}W")
+            logger.info(f"discharge: {-power}kW")
             rts.madd([
                       ("battery_charge_sec", timeKey, 0.0),
                       ("battery_discharge_sec", timeKey, float(-power))

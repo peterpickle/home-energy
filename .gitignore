@@ -7,3 +7,4 @@ db.sqlite3
 p1_error_log.txt
 production_error_log.txt
 vent_error_log.txt
+solix_error_log.txt
