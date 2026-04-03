@@ -1,0 +1,11 @@
+[Unit]
+Description=Solix reader service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python solix-reader.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

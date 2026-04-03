@@ -56,6 +56,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable vent-reader.service
 sudo systemctl start vent-reader.service
 
+#TODO: check feature flag battery
+
+#install service solix-reader
+set_absolute_path_in_file solix-reader.py solix-reader.service
+sudo cp solix-reader.service /lib/systemd/system/
+sudo chmod 644 /lib/systemd/system/solix-reader.service
+sudo systemctl daemon-reload
+sudo systemctl enable solix-reader.service
+sudo systemctl start solix-reader.service
+
 
 #check service
 #sudo systemctl status p1-reader.service
