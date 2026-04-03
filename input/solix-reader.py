@@ -58,18 +58,17 @@ def on_mqtt_message(client, userdata, msg):
         #logger.info(f"time {timeKey} soc {soc}%, power {power}W")
         if power >=0:
             logger.info(f"charge: {power}W")
-            result = rts.madd([
+            rts.madd([
                       ("battery_charge_sec", timeKey, float(power)),
                       ("battery_discharge_sec", timeKey, 0.0)
                      ])
-            logger.info(f"Redis write result: {result}")
         else:
             logger.info(f"discharge: {-power}W")
-            result = rts.madd([
+            rts.madd([
                       ("battery_charge_sec", timeKey, 0.0),
                       ("battery_discharge_sec", timeKey, float(-power))
                      ])
-            logger.info(f"Redis write result: {result}")
+        r.set('battery.soc', soc)
     except json.JSONDecodeError:
         logger.error(f"Failed to parse payload: {msg.payload}")
     except Exception as e:
