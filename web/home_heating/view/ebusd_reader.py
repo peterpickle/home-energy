@@ -142,7 +142,6 @@ read_fields = [
     [HEATPUMP_CIRCUIT_NAME, 'YieldThisYear11', RETURN_TYPE.ANY, 3600 * 24],
     [HEATPUMP_CIRCUIT_NAME, 'YieldThisYear12', RETURN_TYPE.ANY, 3600 * 24],
     [HEATPUMP_CIRCUIT_NAME, 'currenterror', RETURN_TYPE.ANY, 0],
-    [HEATPUMP_CIRCUIT_NAME, 'WaterThroughput', RETURN_TYPE.ANY, 0],
     [HEATPUMP_CIRCUIT_NAME, 'Status01', RETURN_TYPE.ANY, 0],
 
     # generic
