@@ -22,6 +22,7 @@
     var FEATURE_GAS = {{ FEATURE_GAS }};
     var FEATURE_PRODUCTION = {{ FEATURE_PRODUCTION }};
     var FEATURE_SOLAR_CONSUMPTION = {{ FEATURE_SOLAR_CONSUMPTION }};
+    var FEATURE_BATTERY = {{ FEATURE_BATTERY }};
 
     var mode = ModeEnum.DAY;
     var detailedDate = new Date();
@@ -131,6 +132,21 @@
             {
                 $("#current_prod_div").html(latest.prod + " W");
             }
+
+            if (FEATURE_BATTERY)
+            {
+                displayVal = 0;
+                if (latest.battery_discharge > 0) {
+                    displayVal = latest.battery_discharge
+                    current_battery_power_div.className = "current_battery_discharging";
+                } else {
+                    displayVal = latest.battery_charge
+                    current_battery_power_div.className = "current_battery_charging";
+                }
+                current_battery_power_div.innerHTML = displayVal + " W";
+                $("#current_battery_soc_div").html(Math.floor(latest.battery_soc) + " %");
+            }
+
             setTimeout("getLatestUsage()", 1000);
         });
     }
@@ -160,6 +176,11 @@
                 total_usage_solar_cons = result.total_usage_prod - result.total_usage_up;
                 $("#data_field_total_solar_cons_div").html(get_fixed_digits(total_usage_solar_cons));
             }
+            if (FEATURE_BATTERY)
+            {
+                $("#data_field_total_battery_charge_div").html(get_fixed_digits(result.total_battery_charge));
+                $("#data_field_total_battery_discharge_div").html(get_fixed_digits(result.total_battery_discharge));
+            }
         } else if (displayMode == DisplayModeEnum.COST) {
             $("#data_field_total_up_div").html(get_fixed_digits(result.total_cost_up_high));
             $("#data_field_total_down_div").html(get_fixed_digits(result.total_cost_down_high));
@@ -180,6 +201,11 @@
             if (FEATURE_SOLAR_CONSUMPTION)
             {
                 $("#data_field_total_solar_cons_div").html(get_fixed_digits(result.total_cost_solar_consumption));
+            }
+            if (FEATURE_BATTERY)
+            {
+                $("#data_field_total_battery_charge_div").html("-");
+                $("#data_field_total_battery_discharge_div").html("-");
             }
         }
 
@@ -486,6 +512,10 @@
         }
         if (FEATURE_SOLAR_CONSUMPTION) {
             data_fields.push({id:"data_field_total_solar_cons_div", label:"SOLAR CONSUMPTION"});
+        }
+        if (FEATURE_BATTERY) {
+            data_fields.push({id:"data_field_total_battery_charge_div", label:"BATTERY CHARGE"});
+            data_fields.push({id:"data_field_total_battery_discharge_div", label:"BATTERY DISCHARGE"});
         }
 
         var data_fields_table = document.getElementById("data_fields_table");
@@ -1115,11 +1145,15 @@
     </script>
 </head>
 <body>
-    <div id="current_usage_div" class="current_usage_normal">
+    <div id="current_usage_div" class="current_usage_ds_normal">
     </div>
     <div id="current_peak_div" class="current_peak">
     </div>
     <div id="current_prod_div" class="current_prod">
+    </div>
+    <div id="current_battery_power_div" class="current_battery_charging">
+    </div>
+    <div id="current_battery_soc_div" class="current_battery_soc">
     </div>
     <div id="chart_div" class="chart">
     </div>
@@ -1146,6 +1180,10 @@
         </button>
     </div>
     <table id="data_fields_table" class="data_fields">
+        <tr>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
+            <td><div class="data_field"></div><div class="data_field_label"></div></td>
+        </tr>
         <tr>
             <td><div class="data_field"></div><div class="data_field_label"></div></td>
             <td><div class="data_field"></div><div class="data_field_label"></div></td>

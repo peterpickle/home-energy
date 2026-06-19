@@ -9,11 +9,12 @@ from django.conf import settings
 from home_energy.view.energy_common import *
 
 if not settings.configured:
-    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_CONSUMPTION=1)
+    settings.configure(FEATURE_GAS=1, FEATURE_PRODUCTION=1, FEATURE_SOLAR_CONSUMPTION=1, FEATURE_BATTERY=1)
 
 FEATURE_PRODUCTION = settings.FEATURE_PRODUCTION
 FEATURE_GAS = settings.FEATURE_GAS
 FEATURE_SOLAR_CONSUMPTION = settings.FEATURE_SOLAR_CONSUMPTION
+FEATURE_BATTERY = settings.FEATURE_BATTERY
 
 #The buckset size should be a number that could used to divide 15 minutes
 day_bucket_size_msec = 3 * 60 * 1000
@@ -99,7 +100,9 @@ def add_missing_data(entries, mode, value):
 }
 '''
 def generate_result(day, mode,
-                    up_entries, down_entries, peak_down_entries, prod_entries, gas_entries):
+                    up_entries, down_entries,
+                    peak_down_entries, prod_entries, gas_entries,
+                    battery_charge_entries, battery_discharge_entries):
     result = {}
     sf_i = 0;
     correction_factor = 1
@@ -139,6 +142,18 @@ def generate_result(day, mode,
                 if len(gas_entry):
                     gas_entry = gas_entry[0]
                     detailed_result_entry["g"] = gas_entry[1]
+
+            detailed_result_entry["bc"] = None
+            detailed_result_entry["bd"] = None
+            if FEATURE_BATTERY:
+                bat_char_entry = [item for item in battery_charge_entries if item[0] == up_entry[0]]
+                if len(bat_char_entry):
+                    bat_char_entry = bat_char_entry[0]
+                    detailed_result_entry["bc"] = bat_char_entry[1] * correction_factor
+                bat_dischar_entry = [item for item in battery_discharge_entries if item[0] == up_entry[0]]
+                if len(bat_dischar_entry):
+                    bat_dischar_entry = bat_dischar_entry[0]
+                    detailed_result_entry["bd"] = bat_dischar_entry[1] * correction_factor
 
             detailed_up_down.append(detailed_result_entry)
         else:
@@ -192,6 +207,8 @@ def get_detailed_usage(date_str, mode_str):
 
     prod_entries = []
     gas_entries = []
+    battery_charge_entries = []
+    battery_discharge_entries = []
 
     #Get the detailed up/down data
     if mode == Mode.DAY:
@@ -208,6 +225,10 @@ def get_detailed_usage(date_str, mode_str):
         if FEATURE_GAS:
             gas_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=day_bucket_size_msec, filters=['type=gas', 'granularity=(5m,15m)'], groupby='type', reduce='min')
             gas_entries = get_entries(gas_entries, 'type', 'gas')
+        if FEATURE_BATTERY:
+            mixed_battery_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='avg', bucket_size_msec=day_bucket_size_msec, filters=['type=(battery_charge,battery_discharge)', 'granularity=(1m,15m)'], groupby='type', reduce='min')
+            battery_charge_entries = get_entries(mixed_battery_entries, 'type', 'battery_charge')
+            battery_discharge_entries = get_entries(mixed_battery_entries, 'type', 'battery_discharge')
     elif mode == Mode.MONTH:
         mixed_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000, filters=['dir=(up,down)', 'granularity=1h'], groupby='dir', reduce='min')
         up_entries = get_entries(mixed_entries, 'dir', 'up')
@@ -218,6 +239,10 @@ def get_detailed_usage(date_str, mode_str):
             prod_entries = get_entries(prod_entries, 'value', 'dayGen')
         if FEATURE_GAS:
             gas_entries = rts.range("gas_15min", start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000)
+        if FEATURE_BATTERY:
+            mixed_battery_entries = rts.mrange(start_time, end_time, align='start', aggregation_type='sum', bucket_size_msec=86400000, filters=['type=(battery_charge,battery_discharge)', 'granularity=1h'], groupby='type', reduce='min')
+            battery_charge_entries = get_entries(mixed_battery_entries, 'type', 'battery_charge')
+            battery_discharge_entries = get_entries(mixed_battery_entries, 'type', 'battery_discharge')
     elif mode == Mode.YEAR:
         up_entries = []
         down_entries = []
@@ -236,7 +261,10 @@ def get_detailed_usage(date_str, mode_str):
 
             if FEATURE_GAS:
                 gas_entries.extend(rts.range("gas_15min", month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size))
-
+            if FEATURE_BATTERY:
+                mixed_battery_entries = rts.mrange(month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size, filters=['type=(battery_charge,battery_discharge)', 'granularity=1h'], groupby='type', reduce='min')
+                battery_charge_entries.extend(get_entries(mixed_battery_entries, 'type', 'battery_charge'))
+                battery_discharge_entries.extend(get_entries(mixed_battery_entries, 'type', 'battery_discharge'))
             if FEATURE_PRODUCTION:
                 prod_result = rts.range("electricity_prod_gen_daily_1day", month_start_epoch, month_end_epoch, align='start', aggregation_type='sum', bucket_size_msec=month_bucket_size)
                 #add the current day
@@ -273,6 +301,10 @@ def get_detailed_usage(date_str, mode_str):
                 gas_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_gas"])])
             if FEATURE_PRODUCTION:
                 prod_entries.extend([(get_epoch_time_ms(year_start), year_total["total_usage_prod"])])
+            if FEATURE_BATTERY:
+                battery_charge_entries.extend([(get_epoch_time_ms(year_start), year_total["total_battery_charge"])])
+                battery_discharge_entries.extend([(get_epoch_time_ms(year_start), year_total["total_battery_discharge"])])
+
 
     #Add missing data at end
     up_entries = add_missing_data(up_entries, mode, 0.0)
@@ -280,10 +312,14 @@ def get_detailed_usage(date_str, mode_str):
     peak_down_entries = add_missing_data(peak_down_entries, mode, 0.0)
     prod_entries = add_missing_data(prod_entries, mode, 'null')
     gas_entries = add_missing_data(gas_entries, mode, '0.0')
+    battery_charge_entries = add_missing_data(battery_charge_entries, mode, '0.0')
+    battery_discharge_entries = add_missing_data(battery_discharge_entries, mode, '0.0')
 
     #generate the output
     result = generate_result(day, mode,
-                             up_entries, down_entries, peak_down_entries, prod_entries, gas_entries)
+                             up_entries, down_entries,
+                             peak_down_entries, prod_entries, gas_entries,
+                             battery_charge_entries, battery_discharge_entries)
     return result
 
 def get_total_usage(starttime_in_s, endtime_in_s, mode):
@@ -316,7 +352,7 @@ def get_total_usage(starttime_in_s, endtime_in_s, mode):
         total_up = total_up_result[0][1]
     if len(total_down_result):
         total_down = total_down_result[0][1]
-    
+
     if now >= starttime_ms and now <= endtime_ms:
         #add the last/current hour
         total_up += get_usage_current_hour(rts, "electricity_up_1h", "electricity_up_1min")
@@ -382,6 +418,25 @@ def get_total_usage(starttime_in_s, endtime_in_s, mode):
         if len(total_gas_result):
             total_gas = total_gas_result[0][1]
 
+
+    #Get total battery usage
+    #TS.RANGE battery_charge_1h <startTime> <stopTime> AGGREGATION SUM 86400000
+    if FEATURE_BATTERY:
+        total_battery_charge = 0
+        total_battery_discharge = 0
+        total_battery_charge_result = rts.range("battery_charge_1h", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+        total_battery_discharge_result = rts.range("battery_discharge_1h", starttime_ms, endtime_ms, align='start', aggregation_type='sum', bucket_size_msec=total_bucket_size)
+        if len(total_battery_charge_result):
+            total_battery_charge = total_battery_charge_result[0][1]
+        if len(total_battery_discharge_result):
+            total_battery_discharge = total_battery_discharge_result[0][1]
+
+        if now >= starttime_ms and now <= endtime_ms:
+            #add the last/current hour
+            total_battery_charge += get_usage_current_hour(rts, "battery_charge_1h", "battery_charge_1min")
+            total_battery_discharge += get_usage_current_hour(rts, "battery_discharge_1h", "battery_discharge_1min")
+
+
     total_usage["total_usage_up"] = total_up
     total_usage["total_usage_down"] = total_down
     total_usage["total_usage_peak_down"] = peak_down
@@ -389,6 +444,9 @@ def get_total_usage(starttime_in_s, endtime_in_s, mode):
         total_usage["total_usage_prod"] = total_prod
     if FEATURE_GAS:
         total_usage["total_usage_gas"] = total_gas
+    if FEATURE_BATTERY:
+        total_usage["total_battery_charge"] = total_battery_charge
+        total_usage["total_battery_discharge"] = total_battery_discharge
 
     return total_usage
 
@@ -442,14 +500,23 @@ def get_latest_usage():
         latest_prod = set_value_if_data_older_than(latest_prod, 0.0, 180000)
         result["prod"] = convert_usage(latest_prod[1])
 
+    if FEATURE_BATTERY:
+        latest_battery_charge = rts.get("battery_charge_sec")
+        latest_batter_discharge = rts.get("battery_discharge_sec")
+        battery_soc = r.get("battery.soc")
+        result["battery_charge"] = convert_usage(latest_battery_charge[1])
+        result["battery_discharge"] = convert_usage(latest_batter_discharge[1])
+        result["battery_soc"] = battery_soc
+
     return result
 
 if __name__ == '__main__':
-    #file executed as script   
+    #file executed as script
     #get input params
     day_str = get_script_arg_day()
     mode_str = get_script_arg_mode()
     #result = get_detailed_usage(day_str, mode_str)
-    result = get_total_usage(0, 0, 4)
+    #result = get_total_usage(0, 0, 4)
+    result = get_latest_usage()
     print(result)
 
