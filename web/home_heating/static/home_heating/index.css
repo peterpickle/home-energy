@@ -60,6 +60,8 @@ option
     text-align: center;
 }
 #grid-item-heating-mode,
+#grid-item-cooling-mode,
+#grid-item-manual-cooling-mode,
 #grid-item-water-mode,
 #grid-item-general-errors
 {

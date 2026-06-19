@@ -17,11 +17,11 @@
     }
 
     function getFieldOutputName(fieldName) {
-        outputFieldName = fieldName;
-        if (fieldName.includes(".")) {
-            outputFieldName = fieldName.split(".", 1)[0];
+        const underscores = fieldName.split("_");
+        if (underscores.length === 2) {
+            return underscores[0];
         }
-        return outputFieldName;
+        return fieldName;
     }
 
     function getEbusValue(circuit, fieldName) {
@@ -84,28 +84,30 @@
     }
 
     function getAllEbusValues() {
-        getEbusValue("700", "z1RoomTemp");
-        getEbusValue("700", "z1DayTemp");
-        getEbusValue("700", "z1NightTemp");
+        getEbusValue("700", "Z1RoomTemp");
+        getEbusValue("700", "Z1DayTemp");
+        getEbusValue("700", "Z1NightTemp");
         getEbusValue("700", "DisplayedOutsideTemp");
         getEbusValue("700", "OpMode");
-        getEbusValue("700", "z1Timer." + getDayOfWeek(new Date()));
+        getEbusValue("700", "Z1Timer_" + getDayOfWeek(new Date()));
 
-        getEbusValue("700", "z1CoolingTemp");
+        getEbusValue("700", "Z1CoolingTemp");
         getEbusValue("700", "OpModeCooling");
-        getEbusValue("700", "z1CoolingTimer." + getDayOfWeek(new Date()));
+        getEbusValue("700", "Z1CoolingTimer_" + getDayOfWeek(new Date()));
+        getEbusValue("700", "ManualCooling");
 
         getEbusValue("700", "HwcStorageTemp");
         getEbusValue("700", "HwcTempDesired");
         getEbusValue("700", "CylinderChargeHyst");
         getEbusValue("700", "HwcOpMode");
-        getEbusValue("700", "hwcTimer." + getDayOfWeek(new Date()));
+        getEbusValue("700", "HwcTimer_" + getDayOfWeek(new Date()));
 
         getEbusValue("hmu", "State");
         getEbusValue("hmu", "Status01");
         getEbusValue("700", "Hc1ActualFlowTempDesired");
+        getEbusValue("700", "RoomHumidity");
         getEbusValue("hmu", "CurrentConsumedPower");
-        getEbusValue("hmu", "currenterror");
+        getEbusValue("hmu", "Currenterror");
     }
 
     function updateValueInUI(circuit, fieldName, outputFieldName, newValue) {
@@ -118,24 +120,26 @@
                 }
             }
             hideShowSheduleButton(circuit, outputFieldName);
-        } else if (fieldName.includes("OpMode")) {
+        } else if (fieldName.includes("OpMode") || fieldName.includes("ManualCooling")) {
             $("#current_"+ circuit + "_" + outputFieldName + "_div > *").removeClass("active");
             $("#current_"+ circuit + "_" + outputFieldName + "_" + newValue).addClass("active");
         } else {
-            if (fieldName == ("z1RoomTemp")) {
+            if (fieldName == ("Z1RoomTemp")) {
                 newValue = (Math.round(newValue * 100) / 100) + " °C";
             } else if (fieldName == ("State")) {
                 newValue = newValue.split(";");
                 newValue = newValue[newValue.length - 1];
                 newValue = newValue.replace("_", " ");
-            } else if (fieldName == ("z1DayTemp")) {
+            } else if (fieldName == ("Z1DayTemp")) {
                 newValue += " °C";
-            } else if (fieldName == ("z1NightTemp")) {
+            } else if (fieldName == ("Z1NightTemp")) {
                 newValue += " °C";
-            } else if (fieldName == ("z1CoolingTemp")) {
+            } else if (fieldName == ("Z1CoolingTemp")) {
                 newValue += " °C";
-            }else if (fieldName == ("DisplayedOutsideTemp")) {
+            } else if (fieldName == ("DisplayedOutsideTemp")) {
                 newValue = (Math.round(newValue * 100) / 100) + " °C";
+            } else if (fieldName == ("RoomHumidity")) {
+                newValue = newValue + " %";
             } else if (fieldName == ("HwcStorageTemp")) {
                 newValue += " °C";
             } else if (fieldName == ("HwcTempDesired")) {
@@ -149,7 +153,7 @@
                 newValue = (Math.round(newValue * 100) / 100) + " °C";
             } else if (fieldName == ("CurrentConsumedPower")) {
                 newValue = newValue * 1000 + " W";
-            }else if (fieldName == ("currenterror")) {
+            } else if (fieldName == ("Currenterror")) {
                 errors = newValue.split(";");
                 newValue = ""
                 for(i = 0; i < errors.length; i++) {
@@ -209,15 +213,15 @@
 
     window.onload = function() {
         uiAddOptionsForTimeSelect();
-        hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
-                        "#700_z1Timer_4", "#700_z1Timer_5",
-                        "#700_z1Timer_br");
-        hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
-                        "#700_hwcTimer_4", "#700_hwcTimer_5",
-                        "#700_hwcTimer_br");
-        hideShowShedule("#700_z1CoolingTimer_2", "#700_z1CoolingTimer_3",
-                        "#700_z1CoolingTimer_4", "#700_z1CoolingTimer_5",
-                        "#700_z1CoolingTimer_br");
+        hideShowShedule("#700_Z1Timer_2", "#700_Z1Timer_3",
+                        "#700_Z1Timer_4", "#700_Z1Timer_5",
+                        "#700_Z1Timer_br");
+        hideShowShedule("#700_HwcTimer_2", "#700_HwcTimer_3",
+                        "#700_HwcTimer_4", "#700_HwcTimer_5",
+                        "#700_HwcTimer_br");
+        hideShowShedule("#700_Z1CoolingTimer_2", "#700_Z1CoolingTimer_3",
+                        "#700_Z1CoolingTimer_4", "#700_Z1CoolingTimer_5",
+                        "#700_Z1CoolingTimer_br");
 
         getAllEbusValues();
 
@@ -225,18 +229,18 @@
             getAllEbusValues();
         });
 
-        $("#dec_700_z1DayTemp").click(function() {
-            incValue("700", "z1DayTemp", -0.5);
+        $("#dec_700_Z1DayTemp").click(function() {
+            incValue("700", "Z1DayTemp", -0.5);
         });
-        $("#inc_700_z1DayTemp").click(function() {
-            incValue("700", "z1DayTemp", +0.5);
+        $("#inc_700_Z1DayTemp").click(function() {
+            incValue("700", "Z1DayTemp", +0.5);
         });
 
-        $("#dec_700_z1NightTemp").click(function() {
-            incValue("700", "z1NightTemp", -0.5);
+        $("#dec_700_Z1NightTemp").click(function() {
+            incValue("700", "Z1NightTemp", -0.5);
         });
-        $("#inc_700_z1NightTemp").click(function() {
-            incValue("700", "z1NightTemp", +0.5);
+        $("#inc_700_Z1NightTemp").click(function() {
+            incValue("700", "Z1NightTemp", +0.5);
         });
 
         $("#current_700_OpMode_off").click(function() {
@@ -251,39 +255,39 @@
         $("#current_700_OpMode_night").click(function() {
             setEbusValue("700", "OpMode", "night");
         });
-        $("#700_z1Timer_schedule > select").on("change", function() {
-            hideShowSheduleButton("700", "z1Timer");
+        $("#700_Z1Timer_schedule > select").on("change", function() {
+            hideShowSheduleButton("700", "Z1Timer");
         });
-        $("#700_z1Timer_2").on("change", function() {
-            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
-                            "#700_z1Timer_4", "#700_z1Timer_5",
-                            "#700_z1Timer_br");
+        $("#700_Z1Timer_2").on("change", function() {
+            hideShowShedule("#700_Z1Timer_2", "#700_Z1Timer_3",
+                            "#700_Z1Timer_4", "#700_Z1Timer_5",
+                            "#700_Z1Timer_br");
         });
-        $("#700_z1Timer_3").on("change", function() {
-            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
-                            "#700_z1Timer_4", "#700_z1Timer_5",
-                            "#700_z1Timer_br");
+        $("#700_Z1Timer_3").on("change", function() {
+            hideShowShedule("#700_Z1Timer_2", "#700_Z1Timer_3",
+                            "#700_Z1Timer_4", "#700_Z1Timer_5",
+                            "#700_Z1Timer_br");
         });
-        $("#700_z1Timer_4").on("change", function() {
-            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
-                            "#700_z1Timer_4", "#700_z1Timer_5",
-                            "#700_z1Timer_br");
+        $("#700_Z1Timer_4").on("change", function() {
+            hideShowShedule("#700_Z1Timer_2", "#700_Z1Timer_3",
+                            "#700_Z1Timer_4", "#700_Z1Timer_5",
+                            "#700_Z1Timer_br");
         });
-        $("#700_z1Timer_5").on("change", function() {
-            hideShowShedule("#700_z1Timer_2", "#700_z1Timer_3",
-                            "#700_z1Timer_4", "#700_z1Timer_5",
-                            "#700_z1Timer_br");
+        $("#700_Z1Timer_5").on("change", function() {
+            hideShowShedule("#700_Z1Timer_2", "#700_Z1Timer_3",
+                            "#700_Z1Timer_4", "#700_Z1Timer_5",
+                            "#700_Z1Timer_br");
         });
-        $("#set_700_z1Timer").click(function() {
-            setSchedule("700", "z1Timer", true);
+        $("#set_700_Z1Timer").click(function() {
+            setSchedule("700", "Z1Timer", true);
         });
 
         <!-- Cooling -->
-        $("#dec_700_z1CoolingTemp").click(function() {
-            incValue("700", "z1CoolingTemp", -0.5);
+        $("#dec_700_Z1CoolingTemp").click(function() {
+            incValue("700", "Z1CoolingTemp", -0.5);
         });
-        $("#inc_700_z1CoolingTemp").click(function() {
-            incValue("700", "z1CoolingTemp", +0.5);
+        $("#inc_700_Z1CoolingTemp").click(function() {
+            incValue("700", "Z1CoolingTemp", +0.5);
         });
         $("#current_700_OpModeCooling_off").click(function() {
             setEbusValue("700", "OpModeCooling", "off");
@@ -294,31 +298,37 @@
         $("#current_700_OpModeCooling_day").click(function() {
             setEbusValue("700", "OpModeCooling", "day");
         });
-        $("#700_z1CoolingTimer_schedule > select").on("change", function() {
-            hideShowSheduleButton("700", "z1CoolingTimer");
+        $("#current_700_ManualCooling_off").click(function() {
+            setEbusValue("700", "ManualCooling", "0");
         });
-        $("#700_z1CoolingTimer_2").on("change", function() {
-            hideShowShedule("#700_z1CoolingTimer_2", "#700_z1CoolingTimer_3",
-                            "#700_z1CoolingTimer_4", "#700_z1CoolingTimer_5",
-                            "#700_z1CoolingTimer_br");
+        $("#current_700_ManualCooling_on").click(function() {
+            setEbusValue("700", "ManualCooling", "1");
         });
-        $("#700_z1CoolingTimer_3").on("change", function() {
-            hideShowShedule("#700_z1CoolingTimer_2", "#700_z1CoolingTimer_3",
-                            "#700_z1CoolingTimer_4", "#700_z1CoolingTimer_5",
-                            "#700_z1CoolingTimer_br");
+        $("#700_Z1CoolingTimer_schedule > select").on("change", function() {
+            hideShowSheduleButton("700", "Z1CoolingTimer");
         });
-        $("#700_z1CoolingTimer_4").on("change", function() {
-            hideShowShedule("#700_z1CoolingTimer_2", "#700_z1CoolingTimer_3",
-                            "#700_z1CoolingTimer_4", "#700_z1CoolingTimer_5",
-                            "#700_z1CoolingTimer_br");
+        $("#700_Z1CoolingTimer_2").on("change", function() {
+            hideShowShedule("#700_Z1CoolingTimer_2", "#700_Z1CoolingTimer_3",
+                            "#700_Z1CoolingTimer_4", "#700_Z1CoolingTimer_5",
+                            "#700_Z1CoolingTimer_br");
         });
-        $("#700_z1CoolingTimer_5").on("change", function() {
-            hideShowShedule("#700_z1CoolingTimer_2", "#700_z1CoolingTimer_3",
-                            "#700_z1CoolingTimer_4", "#700_z1CoolingTimer_5",
-                            "#700_z1CoolingTimer_br");
+        $("#700_Z1CoolingTimer_3").on("change", function() {
+            hideShowShedule("#700_Z1CoolingTimer_2", "#700_Z1CoolingTimer_3",
+                            "#700_Z1CoolingTimer_4", "#700_Z1CoolingTimer_5",
+                            "#700_Z1CoolingTimer_br");
         });
-        $("#set_700_z1CoolingTimer").click(function() {
-            setSchedule("700", "z1CoolingTimer", true);
+        $("#700_Z1CoolingTimer_4").on("change", function() {
+            hideShowShedule("#700_Z1CoolingTimer_2", "#700_Z1CoolingTimer_3",
+                            "#700_Z1CoolingTimer_4", "#700_Z1CoolingTimer_5",
+                            "#700_Z1CoolingTimer_br");
+        });
+        $("#700_Z1CoolingTimer_5").on("change", function() {
+            hideShowShedule("#700_Z1CoolingTimer_2", "#700_Z1CoolingTimer_3",
+                            "#700_Z1CoolingTimer_4", "#700_Z1CoolingTimer_5",
+                            "#700_Z1CoolingTimer_br");
+        });
+        $("#set_700_Z1CoolingTimer").click(function() {
+            setSchedule("700", "Z1CoolingTimer", true);
         });
 
         <!-- Water -->
@@ -345,31 +355,31 @@
         $("#current_700_HwcOpMode_day").click(function() {
             setEbusValue("700", "HwcOpMode", "day");
         });
-        $("#700_hwcTimer_schedule > select").on("change", function() {
-            hideShowSheduleButton("700", "hwcTimer");
+        $("#700_HwcTimer_schedule > select").on("change", function() {
+            hideShowSheduleButton("700", "HwcTimer");
         });
-        $("#700_hwcTimer_2").on("change", function() {
-            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
-                            "#700_hwcTimer_4", "#700_hwcTimer_5",
-                            "#700_hwcTimer_br");
+        $("#700_HwcTimer_2").on("change", function() {
+            hideShowShedule("#700_HwcTimer_2", "#700_HwcTimer_3",
+                            "#700_HwcTimer_4", "#700_HwcTimer_5",
+                            "#700_HwcTimer_br");
         });
-        $("#700_hwcTimer_3").on("change", function() {
-            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
-                            "#700_hwcTimer_4", "#700_hwcTimer_5",
-                            "#700_hwcTimer_br");
+        $("#700_HwcTimer_3").on("change", function() {
+            hideShowShedule("#700_HwcTimer_2", "#700_HwcTimer_3",
+                            "#700_HwcTimer_4", "#700_HwcTimer_5",
+                            "#700_HwcTimer_br");
         });
-        $("#700_hwcTimer_4").on("change", function() {
-            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
-                            "#700_hwcTimer_4", "#700_hwcTimer_5",
-                            "#700_hwcTimer_br");
+        $("#700_HwcTimer_4").on("change", function() {
+            hideShowShedule("#700_HwcTimer_2", "#700_HwcTimer_3",
+                            "#700_HwcTimer_4", "#700_HwcTimer_5",
+                            "#700_HwcTimer_br");
         });
-        $("#700_hwcTimer_5").on("change", function() {
-            hideShowShedule("#700_hwcTimer_2", "#700_hwcTimer_3",
-                            "#700_hwcTimer_4", "#700_hwcTimer_5",
-                            "#700_hwcTimer_br");
+        $("#700_HwcTimer_5").on("change", function() {
+            hideShowShedule("#700_HwcTimer_2", "#700_HwcTimer_3",
+                            "#700_HwcTimer_4", "#700_HwcTimer_5",
+                            "#700_HwcTimer_br");
         });
-        $("#set_700_hwcTimer").click(function() {
-            setSchedule("700", "hwcTimer", true);
+        $("#set_700_HwcTimer").click(function() {
+            setSchedule("700", "HwcTimer", true);
         });
     }
 
@@ -387,36 +397,36 @@
                 <i class="bi bi-thermometer-half"></i>&nbsp;
             </div>
             <div class="grid-item value">
-                <div id="current_700_z1RoomTemp_div" class="current_value"></div>
+                <div id="current_700_Z1RoomTemp_div" class="current_value"></div>
             </div>
             <div class="grid-item value-right">
 
             </div>
             <!-- row 2 -->
             <div class="grid-item label-left">
-                <input type="button" id="dec_700_z1DayTemp" class="inc_dec_button" value="-"/>
+                <input type="button" id="dec_700_Z1DayTemp" class="inc_dec_button" value="-"/>
             </div>
             <div class="grid-item label">
                 <i class="bi bi-thermometer-sun"></i>&nbsp;
             </div>
             <div class="grid-item value">
-                <div id="current_700_z1DayTemp_div" class="current_value"></div>
+                <div id="current_700_Z1DayTemp_div" class="current_value"></div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="inc_700_z1DayTemp"  class="inc_dec_button" value="+"/>
+                <input type="button" id="inc_700_Z1DayTemp"  class="inc_dec_button" value="+"/>
             </div>
             <!-- row 3 -->
             <div class="grid-item label-left">
-                <input type="button" id="dec_700_z1NightTemp"  class="inc_dec_button" value="-"/>
+                <input type="button" id="dec_700_Z1NightTemp"  class="inc_dec_button" value="-"/>
             </div>
             <div class="grid-item label">
                 <i class="bi bi-thermometer-snow"></i>&nbsp;
             </div>
             <div class="grid-item value">
-                <div id="current_700_z1NightTemp_div" class="current_value"></div>
+                <div id="current_700_Z1NightTemp_div" class="current_value"></div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="inc_700_z1NightTemp"  class="inc_dec_button" value="+"/>
+                <input type="button" id="inc_700_Z1NightTemp"  class="inc_dec_button" value="+"/>
             </div>
             <!-- row 4 -->
             <div class="grid-item label-left">
@@ -446,71 +456,89 @@
                 <i class="bi bi-clock"></i>
             </div>
             <div id="grid-item-heating-schedule" class="grid-item">
-                <div id="current_700_z1Timer_div" class="current_value" style="display: none;"></div>
-                <div id="700_z1Timer_schedule">
-                    <select id="700_z1Timer_0"></select>
-                    <select id="700_z1Timer_1"></select>
+                <div id="current_700_Z1Timer_div" class="current_value" style="display: none;"></div>
+                <div id="700_Z1Timer_schedule">
+                    <select id="700_Z1Timer_0"></select>
+                    <select id="700_Z1Timer_1"></select>
                     <br/>
-                    <select id="700_z1Timer_2"></select>
-                    <select id="700_z1Timer_3"></select>
+                    <select id="700_Z1Timer_2"></select>
+                    <select id="700_Z1Timer_3"></select>
                     <br/>
-                    <select id="700_z1Timer_4"></select>
-                    <select id="700_z1Timer_5"></select>
-                    <div id="700_z1Timer_br"></div>
+                    <select id="700_Z1Timer_4"></select>
+                    <select id="700_Z1Timer_5"></select>
+                    <div id="700_Z1Timer_br"></div>
                 </div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="set_700_z1Timer" class="set_button" value="Set"/>
+                <input type="button" id="set_700_Z1Timer" class="set_button" value="Set"/>
             </div>
         </div>
     </div>
-
-    <!-- TODO: show humidity -->
 
     <div class="section_div">
         <h1 class="h1_title">Cooling</h1>
         <div class="grid-container">
             <!-- row 1 -->
             <div class="grid-item label-left">
-                <input type="button" id="dec_700_z1CoolingTemp" class="inc_dec_button" value="-"/>
+                <input type="button" id="dec_700_Z1CoolingTemp" class="inc_dec_button" value="-"/>
             </div>
             <div class="grid-item label">
                 <i class="bi bi-thermometer-snow"></i>&nbsp;
             </div>
             <div class="grid-item value">
-                <div id="current_700_z1CoolingTemp_div" class="current_value"></div>
+                <div id="current_700_Z1CoolingTemp_div" class="current_value"></div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="inc_700_z1CoolingTemp"  class="inc_dec_button" value="+"/>
+                <input type="button" id="inc_700_Z1CoolingTemp"  class="inc_dec_button" value="+"/>
             </div>
             <!-- row 2 -->
-            <div id="grid-item-heating-mode" class="grid-item">
+            <div class="grid-item label-left">
+
+            </div>
+            <div class="grid-item label">
+                <i class="bi bi-moisture"></i>&nbsp;
+            </div>
+            <div class="grid-item value">
+                <div id="current_700_RoomHumidity_div" class="current_value"></div>
+            </div>
+            <div class="grid-item value-right">
+
+            </div>
+            <!-- row 3 -->
+            <div id="grid-item-cooling-mode" class="grid-item">
                 <div id="current_700_OpModeCooling_div" class="btn-group mode" role="group">
                     <button type="button" id="current_700_OpModeCooling_off"   class="btn btn-secondary mode_button">Off</button>
                     <button type="button" id="current_700_OpModeCooling_auto"  class="btn btn-secondary mode_button">Auto</button>
                     <button type="button" id="current_700_OpModeCooling_day"   class="btn btn-secondary mode_button">Day</button>
                 </div>
             </div>
-            <!-- row 3 -->
+            <!-- row 4 -->
             <div class="grid-item label-left">
                 <i class="bi bi-clock"></i>
             </div>
             <div id="grid-item-cooling-schedule" class="grid-item">
-                <div id="current_700_z1CoolingTimer_div" class="current_value" style="display: none;"></div>
-                <div id="700_z1CoolingTimer_schedule">
-                    <select id="700_z1CoolingTimer_0"></select>
-                    <select id="700_z1CoolingTimer_1"></select>
+                <div id="current_700_Z1CoolingTimer_div" class="current_value" style="display: none;"></div>
+                <div id="700_Z1CoolingTimer_schedule">
+                    <select id="700_Z1CoolingTimer_0"></select>
+                    <select id="700_Z1CoolingTimer_1"></select>
                     <br/>
-                    <select id="700_z1CoolingTimer_2"></select>
-                    <select id="700_z1CoolingTimer_3"></select>
+                    <select id="700_Z1CoolingTimer_2"></select>
+                    <select id="700_Z1CoolingTimer_3"></select>
                     <br/>
-                    <select id="700_z1CoolingTimer_4"></select>
-                    <select id="700_z1CoolingTimer_5"></select>
-                    <div id="700_z1CoolingTimer_br"></div>
+                    <select id="700_Z1CoolingTimer_4"></select>
+                    <select id="700_Z1CoolingTimer_5"></select>
+                    <div id="700_Z1CoolingTimer_br"></div>
                 </div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="set_700_z1CoolingTimer" class="set_button" value="Set"/>
+                <input type="button" id="set_700_Z1CoolingTimer" class="set_button" value="Set"/>
+            </div>
+            <!-- row 5 -->
+            <div id="grid-item-manual-cooling-mode" class="grid-item">
+                <div id="current_700_ManualCooling_div" class="btn-group mode" role="group">
+                    <button type="button" id="current_700_ManualCooling_0" class="btn btn-secondary mode_button">Off</button>
+                    <button type="button" id="current_700_ManualCooling_1" class="btn btn-secondary mode_button">On</button>
+                </div>
             </div>
         </div>
     </div>
@@ -572,21 +600,21 @@
                 <i class="bi bi-clock"></i>
             </div>
             <div id="grid-item-water-schedule" class="grid-item">
-                <div id="current_700_hwcTimer_div" class="current_value" style="display: none;"></div>
-                <div id="700_hwcTimer_schedule">
-                    <select id="700_hwcTimer_0"></select>
-                    <select id="700_hwcTimer_1"></select>
+                <div id="current_700_HwcTimer_div" class="current_value" style="display: none;"></div>
+                <div id="700_HwcTimer_schedule">
+                    <select id="700_HwcTimer_0"></select>
+                    <select id="700_HwcTimer_1"></select>
                     <br/>
-                    <select id="700_hwcTimer_2"></select>
-                    <select id="700_hwcTimer_3"></select>
+                    <select id="700_HwcTimer_2"></select>
+                    <select id="700_HwcTimer_3"></select>
                     <br/>
-                    <select id="700_hwcTimer_4"></select>
-                    <select id="700_hwcTimer_5"></select>
-                    <div id="700_hwcTimer_br"></div>
+                    <select id="700_HwcTimer_4"></select>
+                    <select id="700_HwcTimer_5"></select>
+                    <div id="700_HwcTimer_br"></div>
                 </div>
             </div>
             <div class="grid-item value-right">
-                <input type="button" id="set_700_hwcTimer"  class="set_button" value="Set"/>
+                <input type="button" id="set_700_HwcTimer"  class="set_button" value="Set"/>
             </div>
         </div>
 
