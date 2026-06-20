@@ -78,7 +78,7 @@
             for (i = 0; i < n; i++) {
                 d = new Date();
                 d.setDate(d.getDate() + i);
-                setEbusValue(circuit, fieldName + "." +  getDayOfWeek(d), newValue);
+                setEbusValue(circuit, fieldName + "_" +  getDayOfWeek(d), newValue);
             }
         }
     }
