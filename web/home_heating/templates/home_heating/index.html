@@ -37,7 +37,7 @@
         url = "set/" + circuit + "/" + fieldName+ "/" + value;
         $.getJSON(url,
             function(response) {
-                if (response == "done") {
+                if (response == "done" || (response == "empty" && fieldName.includes("Timer"))) {
                     updateValueInUI(circuit, fieldName, getFieldOutputName(fieldName), value);
                 }
             }
