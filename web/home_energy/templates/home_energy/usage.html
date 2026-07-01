@@ -37,9 +37,11 @@
 
     var chartVaxisMultiple = 500;
 
-    var chartColors = ['#009FF5', '#8cea5d', '#f7B32b', '#dc5665', '#2266bf', '#cc1467', '#78bc61', '#fed9b7'];
+    var chartColors = ['#e3d8f1', '#966b9d', '#009FF5', '#8cea5d', '#f7B32b', '#dc5665', '#2266bf', '#cc1467', '#78bc61', '#fed9b7'];
     var chartShowUp = true;
     var chartShowDown = true;
+    var chartShowBatteryCharge = true;
+    var chartShowBatteryDischarge = true;
     var chartShowProd = true;
     var chartShowCons = false;
     var chartShowPeakDown = false;
@@ -53,6 +55,8 @@
     var chartPrevShowPeakDown;
     var chartPrevShowGas;
     var chartPrevShowSolarCons;
+    var chartPrevShowBatteryCharge;
+    var chartPrevShowBatteryDischarge;
 
     Date.prototype.addDays = function (days) {
         const date = new Date(this.valueOf());
@@ -225,8 +229,12 @@
             c = null;
             g = null;
             sc = null;
+            bc = null;
+            bd = null;
 
-            chartData.addColumn('datetime', 'Tijd'); //datetime or timeofday
+            chartData.addColumn('datetime', 'Time'); //datetime or timeofday
+            chartData.addColumn('number', 'Battery Charge');
+            chartData.addColumn('number', 'Battery Discharge');
             chartData.addColumn('number', 'Down');
             chartData.addColumn('number', 'Up');
             chartData.addColumn('number', 'Production');
@@ -265,7 +273,13 @@
                         sc = null;
                     }
                 }
+                if (FEATURE_BATTERY) {
+                    bc = (entry.bc) ? -entry.bc : null;
+                    bd = (entry.bd) ? entry.bd : null;
+                }
                 chartData.addRow([timestamp,
+                                  bc,
+                                  bd,
                                   entry.d,
                                   (entry.u == 0) ? null : -entry.u,
                                   p,
@@ -428,19 +442,45 @@
                 chartDisplayData.setValue(rId, cId, null);
             }
         }
+        if (!chartShowBatteryCharge) {
+            cId = chartDisplayData.getColumnIndex('Battery Charge');
+            nbOfRows = chartDisplayData.getNumberOfRows();
+            for (rId = 0;rId < nbOfRows; rId++) {
+                chartDisplayData.setValue(rId, cId, null);
+            }
+        }
+        if (!chartShowBatteryDischarge) {
+            cId = chartDisplayData.getColumnIndex('Battery Discharge');
+            nbOfRows = chartDisplayData.getNumberOfRows();
+            for (rId = 0;rId < nbOfRows; rId++) {
+                chartDisplayData.setValue(rId, cId, null);
+            }
+        }
 
-        if (chartShowUp && chartShowProd) {
+        if (chartShowProd) {
             //set the production to the self usage, not the full production
             cId1 = chartData.getColumnIndex('Production');
             cUpId = chartData.getColumnIndex('Up');
             cId2 = chartDisplayData.getColumnIndex('Production');
+            cBatteryChargeId = null
+            if (chartShowBatteryCharge) {
+                cBatteryChargeId = chartData.getColumnIndex('Battery Charge');
+            }
             nbOfRows = chartDisplayData.getNumberOfRows();
             for (rId = 0;rId < nbOfRows; rId++) {
                 prod = chartData.getValue(rId, cId1);
                 if (prod) {
                     prod = -prod;
-                    up = -chartData.getValue(rId, cUpId);
-                    chartDisplayData.setValue(rId, cId2, (prod > up) ? -(prod - up) : 0);
+                    selfCons = 0
+                    if (chartShowUp) {
+                        up = -chartData.getValue(rId, cUpId);
+                        selfCons += up
+                    }
+                    if (cBatteryChargeId != null && chartShowBatteryCharge) {
+                        bc = -chartData.getValue(rId, cBatteryChargeId);
+                        selfCons += bc
+                    }
+                    chartDisplayData.setValue(rId, cId2, (prod > selfCons) ? -(prod - selfCons) : 0);
                 }
             }
         }
@@ -652,6 +692,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable peak data
                         chartShowPeakDown = false;
@@ -660,6 +702,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable consumption data
                         chartShowCons = false;
@@ -668,6 +712,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable gas data
                         chartShowGas = false;
@@ -676,6 +722,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable solar consumption data
                         chartShowSolarCons = false;
@@ -694,6 +742,8 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                    chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                     //disable peak data
                     chartShowPeakDown = false;
@@ -702,6 +752,8 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                    chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                     //disable consumption data
                     chartShowCons = false;
@@ -710,6 +762,8 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                    chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                     //disable gas data
                     chartShowGas = false;
@@ -718,6 +772,8 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                    chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                     //disable solar consumption data
                     chartShowSolarCons = false;
@@ -736,6 +792,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable peak data
                         chartShowPeakDown = false;
@@ -744,6 +802,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable consumption data
                         chartShowCons = false;
@@ -752,6 +812,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable gas data
                         chartShowGas = false;
@@ -760,11 +822,115 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
 
                         //disable solar consumption data
                         chartShowSolarCons = false;
                     } else {
                         chartShowProd = !chartShowProd;
+                    }
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
+                }
+            }
+        );
+        $("#data_field_total_battery_charge_div").click(
+            function() {
+                if (FEATURE_BATTERY) {
+                    if (chartShowPeakDown) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable peak data
+                        chartShowPeakDown = false;
+                    } else if (chartShowCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable consumption data
+                        chartShowCons = false;
+                    } else if (chartShowGas) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable gas data
+                        chartShowGas = false;
+                    } else if (chartShowSolarCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable solar consumption data
+                        chartShowSolarCons = false;
+                    } else {
+                        chartShowBatteryCharge = !chartShowBatteryCharge;
+                    }
+                    showHideChartColumns();
+                    drawChart(mode, chartDisplayData);
+                }
+            }
+        );
+        $("#data_field_total_battery_discharge_div").click(
+            function() {
+                if (FEATURE_BATTERY) {
+                    if (chartShowPeakDown) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable peak data
+                        chartShowPeakDown = false;
+                    } else if (chartShowCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable consumption data
+                        chartShowCons = false;
+                    } else if (chartShowGas) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable gas data
+                        chartShowGas = false;
+                    } else if (chartShowSolarCons) {
+                        //restore the saved settings
+                        chartShowUp = chartPrevShowUp;
+                        chartShowDown = chartPrevShowDown;
+                        chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
+
+                        //disable solar consumption data
+                        chartShowSolarCons = false;
+                    } else {
+                        chartShowBatteryDischarge = !chartShowBatteryDischarge;
                     }
                     showHideChartColumns();
                     drawChart(mode, chartDisplayData);
@@ -778,6 +944,8 @@
                     chartShowUp = chartPrevShowUp;
                     chartShowDown = chartPrevShowDown;
                     chartShowProd = chartPrevShowProd;
+                    chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                    chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
                     chartShowCons = chartPrevShowCons;
                     chartShowGas = chartPrevShowGas;
                     chartShowSolarCons = chartPrevShowSolarCons;
@@ -792,6 +960,8 @@
                     chartPrevShowUp = chartShowUp;
                     chartPrevShowDown = chartShowDown;
                     chartPrevShowProd = chartShowProd;
+                    chartShowPrevBatteryCharge = chartShowBatteryCharge;
+                    chartShowPrevBatteryDischarge = chartShowBatteryDischarge;
                     chartPrevShowCons = chartShowCons;
                     chartPrevShowGas = chartShowGas;
                     chartPrevShowSolarCons = chartShowSolarCons;
@@ -799,6 +969,8 @@
                     //disable other data
                     chartShowUp = false;
                     chartShowDown = false;
+                    chartShowBatteryCharge = false;
+                    chartShowBatteryDischarge = false;
                     chartShowProd = false;
                     chartShowCons = false;
                     chartShowGas = false;
@@ -817,6 +989,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowGas = chartPrevShowGas;
                         chartShowSolarCons = chartPrevShowSolarCons;
@@ -831,6 +1005,8 @@
                         chartPrevShowUp = chartShowUp;
                         chartPrevShowDown = chartShowDown;
                         chartPrevShowProd = chartShowProd;
+                        chartShowPrevBatteryCharge = chartShowBatteryCharge;
+                        chartShowPrevBatteryDischarge = chartShowBatteryDischarge;
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowGas = chartShowGas;
                         chartPrevShowSolarCons = chartShowSolarCons;
@@ -839,6 +1015,8 @@
                         chartShowUp = false;
                         chartShowDown = false;
                         chartShowProd = false;
+                        chartShowBatteryCharge = false;
+                        chartShowBatteryDischarge = false;
                         chartShowPeakDown = false;
                         chartShowGas = false;
                         chartShowSolarCons = false;
@@ -857,6 +1035,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
                         chartShowCons = chartPrevShowCons;
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowSolarCons = chartPrevShowSolarCons;
@@ -871,6 +1051,8 @@
                         chartPrevShowUp = chartShowUp;
                         chartPrevShowDown = chartShowDown;
                         chartPrevShowProd = chartShowProd;
+                        chartShowPrevBatteryCharge = chartShowBatteryCharge;
+                        chartShowPrevBatteryDischarge = chartShowBatteryDischarge;
                         chartPrevShowCons = chartShowCons;
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowSolarCons = chartShowSolarCons;
@@ -879,6 +1061,8 @@
                         chartShowUp = false;
                         chartShowDown = false;
                         chartShowProd = false;
+                        chartShowBatteryCharge = false;
+                        chartShowBatteryDischarge = false;
                         chartShowCons = false;
                         chartShowPeakDown = false;
                         chartShowSolarCons = false;
@@ -897,6 +1081,8 @@
                         chartShowUp = chartPrevShowUp;
                         chartShowDown = chartPrevShowDown;
                         chartShowProd = chartPrevShowProd;
+                        chartShowBatteryCharge = chartShowPrevBatteryCharge;
+                        chartShowBatteryDischarge = chartShowPrevBatteryDischarge;
                         chartShowPeakDown = chartPrevShowPeakDown;
                         chartShowGas = chartPrevShowGas;
                         chartShowCons = chartPrevShowCons;
@@ -911,6 +1097,8 @@
                         chartPrevShowUp = chartShowUp;
                         chartPrevShowDown = chartShowDown;
                         chartPrevShowProd = chartShowProd;
+                        chartShowPrevBatteryCharge = chartShowBatteryCharge;
+                        chartShowPrevBatteryDischarge = chartShowBatteryDischarge;
                         chartPrevShowPeakDown = chartShowPeakDown;
                         chartPrevShowGas = chartShowGas;
                         chartPrevShowCons = chartShowCons;
@@ -919,6 +1107,8 @@
                         chartShowUp = false;
                         chartShowDown = false;
                         chartShowProd = false;
+                        chartShowBatteryCharge = false;
+                        chartShowBatteryDischarge = false;
                         chartShowPeakDown = false;
                         chartShowGas = false;
                         chartShowCons = false;
@@ -958,42 +1148,41 @@
     }
 
     function drawChart(mode, data) {
-        var dayOptions = { 
+        var dayOptions = {
                         curveType: 'function',
                         height: 600,
                         chartArea: {width: '85%', height: '85%'},
                         backgroundColor: 'transparent',
                         colors: chartColors,
                         seriesType: 'bars',
-                        series: {7: {type: 'line'}},
                         interpolateNulls: true,
-                        bar: { 
+                        bar: {
                             groupWidth: '80%'
                         },
-                        vAxis: { 
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                        vAxis: {
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: {  
+                            gridlines: {
                                 multiple: chartVaxisMultiple,
                                 color: '#6e6e6e',
-                            }, 
-                            minorGridlines: { 
+                            },
+                            minorGridlines: {
                                 count: 0,
                             },
                         },
                         hAxis: {
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: { 
+                            gridlines: {
                                 count : 12,
                                 color: 'transparent',
                                 units: { hours: { format: 'HH' } }
                             },
-                            minorGridlines: { 
+                            minorGridlines: {
                                 count: 0,
-                            } 
+                            }
                         },
                         explorer: {
                             axis: 'horizontal',
@@ -1009,35 +1198,35 @@
                         legend: 'none'}
 
 
-        var monthOptions = { 
+        var monthOptions = {
                         height: 600,
                         chartArea: {width: '85%', height: '85%'},
                         backgroundColor: 'transparent',
                         colors: chartColors,
                         seriesType: 'bars',
-                        vAxis: { 
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                        vAxis: {
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: {  
+                            gridlines: {
                                 multiple: 1,
                                 color: '#6e6e6e',
-                            }, 
-                            minorGridlines: { 
+                            },
+                            minorGridlines: {
                                 count: 0,
                             },
                         },
                         hAxis: {
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: { 
+                            gridlines: {
                                 color: 'transparent',
                                 units: { days: { format: 'd' } }
                             },
-                            minorGridlines: { 
+                            minorGridlines: {
                                 count: 0,
-                            } 
+                            }
                         },
                         animation: {
                             startup: true,
@@ -1047,32 +1236,32 @@
                         isStacked: true,
                         legend: 'none'}
 
-        var yearOptions = { 
+        var yearOptions = {
                         height: 600,
                         chartArea: {width: '85%', height: '85%'},
                         backgroundColor: 'transparent',
                         colors: chartColors,
                         seriesType: 'bars',
-                        vAxis: { 
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                        vAxis: {
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: {  
+                            gridlines: {
                                 multiple: 1,
                                 color: '#6e6e6e',
-                            }, 
-                            minorGridlines: { 
+                            },
+                            minorGridlines: {
                                 count: 0,
                             },
                         },
                         hAxis: {
-                            textStyle: { 
-                                color: '#f4f4f9' 
+                            textStyle: {
+                                color: '#f4f4f9'
                             },
-                            gridlines: { 
+                            gridlines: {
                                 color: 'transparent',
                             },
-                            minorGridlines: { 
+                            minorGridlines: {
                                 count: 0,
                             },
                             format: 'MMM'
@@ -1095,7 +1284,7 @@
                             textStyle: {
                                 color: '#f4f4f9'
                             },
-                            gridlines: { 
+                            gridlines: {
                                 multiple: 1,
                                 color: '#6e6e6e',
                             },
@@ -1139,7 +1328,7 @@
         } else if (mode == ModeEnum.ALL) {
             options = allOptions;
         }
-       
+
         chart.draw(data, options);
     }
     </script>

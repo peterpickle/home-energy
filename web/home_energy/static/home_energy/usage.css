@@ -192,19 +192,19 @@ body
 }
 #data_field_total_battery_charge_div
 {
-    color: #966b9d;
+    color: #e3d8f1;
 }
 #data_field_total_battery_charge_label_div
 {
-    color: #966b9d;
+    color: #e3d8f1;
 }
 #data_field_total_battery_discharge_div
 {
-    color: #e3d8f1;
+    color: #966b9d;
 }
 #data_field_total_battery_discharge_label_div
 {
-    color: #e3d8f1;
+    color: #966b9d;
 }
 #cost_button
 {

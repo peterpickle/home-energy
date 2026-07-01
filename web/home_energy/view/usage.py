@@ -311,9 +311,9 @@ def get_detailed_usage(date_str, mode_str):
     down_entries = add_missing_data(down_entries, mode, 0.0)
     peak_down_entries = add_missing_data(peak_down_entries, mode, 0.0)
     prod_entries = add_missing_data(prod_entries, mode, 'null')
-    gas_entries = add_missing_data(gas_entries, mode, '0.0')
-    battery_charge_entries = add_missing_data(battery_charge_entries, mode, '0.0')
-    battery_discharge_entries = add_missing_data(battery_discharge_entries, mode, '0.0')
+    gas_entries = add_missing_data(gas_entries, mode, 0.0)
+    battery_charge_entries = add_missing_data(battery_charge_entries, mode, 0.0)
+    battery_discharge_entries = add_missing_data(battery_discharge_entries, mode, 0.0)
 
     #generate the output
     result = generate_result(day, mode,
