@@ -10,8 +10,8 @@
 --peak: #dc5665
 --gas: #cc1467
 --solar-consumption: #78bc61
---batter_charging: #966b9d
---batter_disharging: #e3d8f1
+--batter_charging: #e3d8f1
+--batter_disharging: #966b9d
 --batter_soc: #966b9d
 * */
 body
@@ -67,7 +67,7 @@ body
     padding: 0px 50px 0px 50px;
     font-size: 40pt;
     font-weight: 900;
-    color: #966b9d;
+    color: #e3d8f1;
 }
 .current_battery_discharging
 {
@@ -75,7 +75,7 @@ body
     padding: 0px 50px 0px 50px;
     font-size: 40pt;
     font-weight: 900;
-    color: #e3d8f1;
+    color: #966b9d;
 }
 .current_battery_soc
 {
@@ -83,7 +83,7 @@ body
     padding: 0px 50px 0px 50px;
     font-size: 40pt;
     font-weight: 900;
-    color: #966b9d;
+    color: #e3d8f1;
 }
 .chart
 {
