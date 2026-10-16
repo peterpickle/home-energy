@@ -3,6 +3,7 @@
 # Anker Solix reader
 
 import json
+import math
 import logging
 import os
 import paho.mqtt.client as mqtt
@@ -42,32 +43,41 @@ r = redis.Redis(host='localhost',
                 password=None, socket_timeout=5, socket_connect_timeout=5)
 rts = r.ts()
 
+def safe_float(value):
+    """Convert a value to float, handling null and invalid values."""
+    if value is None:
+        return None
+
+    try:
+        result = float(value)
+        return result if math.isfinite(result) else None
+    except (TypeError, ValueError):
+        return None
+
 def on_mqtt_connect(client, userdata, flags, rc):
     logger.info('subscribe to MQTT topics')
-    client.subscribe('solix/site/Zwaluwstraat/scenInfo')
+    client.subscribe('solix/live')
 
 def on_mqtt_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode('utf-8'))
         #print(json.dumps(payload, indent=2))  # Pretty-print the JSON
         # SOC: State of Charge (%)
-        soc = round(float(payload['solarbank_info']['total_battery_power']) * 100, 1)
-        # power (kW) positive for charging, negative for discharging
-        power = (float(payload['solarbank_info']['total_charging_power']) - float(payload['solarbank_info']['battery_discharge_power']))/1000
+        soc = safe_float(payload.get('battery_pct'))
+        charge_w = safe_float(payload.get('bat_charging_w'))
+        discharge_w = safe_float(payload.get('bat_discharging_w'))
+
+        power_valid = charge_w is not None and discharge_w is not None
+
+        charge_kw = max(0.0, charge_w or 0.0) / 1000
+        discharge_kw = max(0.0, discharge_w or 0.0) / 1000
+
         timeKey = int(time.time()) * 1000
-        #logger.info(f"time {timeKey} soc {soc}%, power {power}W")
-        if power >=0:
-            logger.info(f"charge: {power}kW")
-            rts.madd([
-                      ("battery_charge_sec", timeKey, float(power)),
-                      ("battery_discharge_sec", timeKey, 0.0)
-                     ])
-        else:
-            logger.info(f"discharge: {-power}kW")
-            rts.madd([
-                      ("battery_charge_sec", timeKey, 0.0),
-                      ("battery_discharge_sec", timeKey, float(-power))
-                     ])
+        #logger.info(f"time {timeKey} soc {soc}%, charge {charge_w}W, discharge {discharge_w}W")
+        rts.madd([
+                  ("battery_charge_sec", timeKey, charge_kw),
+                  ("battery_discharge_sec", timeKey, discharge_kw)
+                ])
         r.set('battery.soc', soc)
     except json.JSONDecodeError:
         logger.error(f"Failed to parse payload: {msg.payload}")
